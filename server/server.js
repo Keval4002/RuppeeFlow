@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import history from 'connect-history-api-fallback'
 
 
 import connectDB from './config/db.js';
@@ -29,6 +30,8 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-type', 'Authorization']
 }));
+
+app.use(history());
 
 app.use(express.static(path.join(__dirname, '../client/expense-tracker/dist')));
 
@@ -67,6 +70,4 @@ app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../client/expense-tracker/dist', 'index.html'));
-});
+
