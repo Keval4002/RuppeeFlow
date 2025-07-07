@@ -1,4 +1,4 @@
-export const BASE_URL = "https://ruppeeflow.onrender.com"
+export const BASE_URL = "https://ruppeeflow.onrender.com/api/v1"
 
 ///utils/apiPath.js
 
