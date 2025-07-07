@@ -55,10 +55,7 @@ app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 
-// Fallback route
-app.use("*", (req, res) => {
-    res.status(404).json({ message: "🔴 Route not found" });
-});
+
 
 // Start server
 const PORT = process.env.PORT || 5000;
