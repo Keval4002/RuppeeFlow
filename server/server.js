@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
@@ -28,6 +30,15 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-type', 'Authorization']
 }));
+
+
+
+app.use(express.static(path.join(__dirname, '../client/expense-tracker/dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../client/expense-tracker/dist', 'index.html'));
+});
+
 
 // Serve static files (like uploaded images)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
