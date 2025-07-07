@@ -23,8 +23,7 @@ connectDB();
 app.use(express.json());
 app.use(cors({
     origin: [
-        "http://localhost:5173",            // Dev frontend
-        "https://ruppeeflow-1.onrender.com/" // Replace with actual Netlify domain
+        "http://localhost:5173","https://ruppeeflow-1.onrender.com","https://ruppeeflow.netlify.app/"
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-type', 'Authorization']
