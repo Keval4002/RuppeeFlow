@@ -1,42 +1,67 @@
-import dotenv from "dotenv"
-import express from "express"
-import cors from "cors"
-import path from "path"
-import { fileURLToPath } from "url"
-import connectDB from './config/db.js'
-import authRoutes from './routes/authRoutes.js'
-import incomeRoutes from './routes/incomeRoutes.js'
-import expenseRoutes from './routes/expenseRoutes.js'
-import dashboardRoutes from './routes/dashboardRoutes.js'
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import incomeRoutes from './routes/incomeRoutes.js';
+import expenseRoutes from './routes/expenseRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 dotenv.config();
 
 const app = express();
-
-app.use(
-    cors({
-        origin: ["http://localhost:5000","https://ruppeeflow.onrender.com"],
-        methods: ['GET', 'POST', 'PUT', 'DELETE'],
-        allowedHeaders:['Content-type', 'Authorization']
-    })
-);
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.json());
-
+// Connect MongoDB
 connectDB();
 
+// Middleware
+app.use(express.json());
+app.use(cors({
+    origin: [
+        "http://localhost:5173",            // Dev frontend
+        "https://your-frontend.netlify.app" // Replace with actual Netlify domain
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-type', 'Authorization']
+}));
+
+// Serve static files (like uploaded images)
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Basic root route for visibility
+app.get("/", (req, res) => {
+    res.status(200).json({
+        status: "🟢 Backend is live",
+        version: "1.0.0",
+        timestamp: new Date(),
+        uptime: process.uptime(),
+        routes: {
+            auth: "/api/v1/auth",
+            income: "/api/v1/income",
+            expense: "/api/v1/expense",
+            dashboard: "/api/v1/dashboard"
+        }
+    });
+});
+
+// API Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 
-//Serve Uploads folder
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Fallback route
+app.use("*", (req, res) => {
+    res.status(404).json({ message: "🔴 Route not found" });
+});
 
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>{console.log(`Listening on port ${PORT}`)});
-
- 
+app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+});
