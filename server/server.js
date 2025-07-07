@@ -15,7 +15,7 @@ const app = express();
 
 app.use(
     cors({
-        origin: process.env.CLIENT_URL,"https://ruppeeflow.onrender.com",
+        origin: [process.env.CLIENT_URL,"https://ruppeeflow.onrender.com"],
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         allowedHeaders:['Content-type', 'Authorization']
     })
