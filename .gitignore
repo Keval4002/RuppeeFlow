@@ -1,0 +1,11 @@
+# Environment
+.env
+.env.*
+
+# Node
+node_modules/
+dist/
+
+# System
+.DS_Store
+
