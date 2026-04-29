@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import incomeRoutes from './routes/incomeRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import bulkRoutes from './routes/bulkRoutes.js';
 
 dotenv.config();
 
@@ -30,15 +31,15 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-type', 'Authorization']
 }));
-
-app.use(history());
-
-app.use(express.static(path.join(__dirname, '../client/expense-tracker/dist')));
-
-
-
 // Serve static files (like uploaded images)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// API Routes
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/income", incomeRoutes);
+app.use("/api/v1/expense", expenseRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/v1/bulk", bulkRoutes);
 
 // Basic root route for visibility
 app.get("/", (req, res) => {
@@ -56,11 +57,9 @@ app.get("/", (req, res) => {
     });
 });
 
-// API Routes
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/income", incomeRoutes);
-app.use("/api/v1/expense", expenseRoutes);
-app.use("/api/v1/dashboard", dashboardRoutes);
+// SPA fallback and serve frontend build (if present)
+app.use(history());
+app.use(express.static(path.join(__dirname, '../client/expense-tracker/dist')));
 
 
 

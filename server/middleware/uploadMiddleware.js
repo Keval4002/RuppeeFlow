@@ -10,8 +10,8 @@ const storage = multer.diskStorage({
     }
 });
 
-//file filter
-const fileFilter = (req, file, cb)=>{
+//file filter for images
+const imageFileFilter = (req, file, cb)=>{
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if(allowedTypes.includes(file.mimetype)){
         cb(null, true);
@@ -20,7 +20,21 @@ const fileFilter = (req, file, cb)=>{
     }
 };
 
-const upload = multer({storage, fileFilter});
+//file filter for Excel files
+const excelFileFilter = (req, file, cb)=>{
+    const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel'
+    ];
+    if(allowedTypes.includes(file.mimetype) || file.originalname.endsWith('.xlsx') || file.originalname.endsWith('.xls')){
+        cb(null, true);
+    }else{
+        cb(new Error('Only .xlsx and .xls file formats are allowed'), false);
+    }
+};
 
-export default upload;
+const upload = multer({storage, fileFilter: imageFileFilter});
+const uploadExcel = multer({storage, fileFilter: excelFileFilter});
+
+export {upload, uploadExcel};
 

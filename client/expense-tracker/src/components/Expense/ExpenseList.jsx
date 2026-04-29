@@ -5,7 +5,7 @@ import moment from 'moment'
 import useUserAuth from '../../hooks/useUserAuth'
 
 
-function ExpenseList({transactions, onDelete, onDownload}) {
+function ExpenseList({transactions, onDelete, onDownload, onDeleteAll}) {
 
     useUserAuth();
   return (
@@ -13,9 +13,16 @@ function ExpenseList({transactions, onDelete, onDownload}) {
         <div className="flex items-center justify-between">
             <h5 className='text-lg'>Expense Categories</h5>
 
-            <button className='card-btn' onClick={onDownload}>
-                <LuDownload /> Download
-            </button>
+            <div className='flex gap-2'>
+                <button className='card-btn' onClick={onDownload}>
+                    <LuDownload /> Download
+                </button>
+                {onDeleteAll && (
+                    <button className='card-btn' onClick={onDeleteAll} style={{color: '#FA2C37'}}>
+                        🗑️ Delete All
+                    </button>
+                )}
+            </div>
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2'>

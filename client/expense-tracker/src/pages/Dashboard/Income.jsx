@@ -9,7 +9,7 @@ import AddIncomeForm from '../../components/Income/AddIncomeForm'
 import toast from 'react-hot-toast';
 import IncomeList from '../../components/Income/IncomeList';
 import DeleteAlert from '../../components/DeleteAlert'
-
+import DeleteByIntervalAlert from '../../components/DeleteByIntervalAlert'
 
 function Income() {
 
@@ -22,6 +22,7 @@ function Income() {
     show:false, 
     data:null
   });
+  const [openDeleteByIntervalModal, setOpenDeleteByIntervalModal] = useState(false);
 
   //Get all income details
   const fetchIncomeDetails = async ()=>{
@@ -81,6 +82,21 @@ function Income() {
         console.error("Error deleting the detail : ", error.response?.data?.message || error.message);
       }
   }
+  
+  const deleteIncomeByInterval = async(interval) => {
+    try {
+      const response = await axiosInstance.post(API_PATH.INCOME.DELETE_INCOME_BY_INTERVAL, {
+        interval
+      });
+      setOpenDeleteByIntervalModal(false);
+      toast.success(response.data.message);
+      fetchIncomeDetails();
+    } catch (error) {
+      console.error("Error deleting income:", error);
+      toast.error(error.response?.data?.message || "Failed to delete income");
+    }
+  }
+  
   //handle download income details
     const handleDownloadIncomeDetails = async()=>{
       try {
@@ -130,6 +146,7 @@ function Income() {
               setOpenDeleteAlert({show:true, data:id})
             }}
             onDownload={handleDownloadIncomeDetails}
+            onDeleteAll={() => setOpenDeleteByIntervalModal(true)}
             />
           </div>
 
@@ -149,6 +166,18 @@ function Income() {
             <DeleteAlert
             content="Are you sure you want to delete this income detail"
             onDelete={()=>{deleteIncome(openDeleteAlert.data)}}
+            />
+          </Modal>
+
+          <Modal
+            isOpen={openDeleteByIntervalModal}
+            onClose={()=>{setOpenDeleteByIntervalModal(false)}}
+            title="Delete Income Records"
+          >
+            <DeleteByIntervalAlert
+            type="income"
+            onDelete={deleteIncomeByInterval}
+            onCancel={()=>{setOpenDeleteByIntervalModal(false)}}
             />
           </Modal>
         </div>
