@@ -3,7 +3,7 @@ import CustomPieChart from '../Charts/CustomPieChart';
 
 function RecentIncomeWithChart({data, totalIncome}) {
 
-    const COLORS = ["#875CF5", "#FA2C37", "#FF6900", "4F39F6"]
+    const COLORS = ["#875CF5", "#FA2C37", "#FF6900", "#4F39F6"]
 
     const [chartData, setChartData] = useState([]);
     const prepareChartData = ()=>{

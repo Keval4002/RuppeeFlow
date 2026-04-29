@@ -45,6 +45,14 @@ function Home() {
     fetchDashboardData();
     return ()=>{};
   }, [])
+  const last30DayExpenses = dashboardData?.last30DaysExpenses?.transactions || [];
+  const recentExpenseFallback = (dashboardData?.recentTransactions || []).filter(
+    (transaction) => transaction.type === "expense"
+  );
+  const expenseTransactions = last30DayExpenses.length
+    ? last30DayExpenses
+    : recentExpenseFallback;
+
   return (
     <DashboardLayout activeMenu="Dashboard">
       <div className='my-5 mx-auto'>
@@ -82,12 +90,12 @@ function Home() {
           />
 
           <ExpenseTransactions 
-            transactions={dashboardData?.last30DaysExpenses?.transactions||[]}
+            transactions={expenseTransactions}
             onSeeMore={()=>navigate("/expense")}
           />
 
           <Last30DaysExpenses
-          data={dashboardData?.last30DaysExpenses?.transactions||[]}
+          data={last30DayExpenses}
           />
 
           <RecentIncomeWithChart

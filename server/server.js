@@ -26,7 +26,7 @@ connectDB();
 app.use(express.json());
 app.use(cors({
     origin: [
-        "http://localhost:5173","https://ruppeeflow-1.onrender.com","https://ruppeeflow.netlify.app"
+        "http://localhost:5173","https://spendwise-1.onrender.com","https://spendwise.netlify.app"
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-type', 'Authorization']
