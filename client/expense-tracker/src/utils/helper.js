@@ -20,49 +20,48 @@ export const getInitials = (name)=>{
 
 
 export const addThousandsSeperator = (num) => {
-  if (num == null || isNaN(num)) return "₹ 0";
+  if (num == null || isNaN(num)) return "₹ 0.00";
 
-  const [integerPart, fractionalPart] = num.toString().split(".");
+  // Round to exactly 2 decimal places to avoid floating-point noise
+  const rounded = parseFloat(Number(num).toFixed(2));
+  const [integerPart, fractionalPart] = rounded.toString().split(".");
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-  const formatted = fractionalPart
-    ? `${formattedInteger}.${fractionalPart}`
-    : formattedInteger;
+  // Always show 2 decimal places
+  const decimals = fractionalPart ? fractionalPart.padEnd(2, "0") : "00";
 
-  return `₹ ${formatted}`;
+  return `₹ ${formattedInteger}.${decimals}`;
 };
 
 export const preparedExpenseBarChartData = (data = [])=>{
-  const chartData = data.map((item)=>({
+  const validData = Array.isArray(data) ? data : [];
+  const chartData = validData.map((item)=>({
     category:item?.category,
-    amount:item?.amount,
+    amount: Number(item?.amount).toFixed(2),
     month: moment(item?.date).format("MMM"),
   }))
-  // console.log(chartData);
   return chartData;
 }
 
 export const preparedIncomeBarChartData = (data = [])=>{
-  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-
+  const validData = Array.isArray(data) ? data : [];
+  const sortedData = [...validData].sort((a, b) => new Date(a.date) - new Date(b.date));
   const chartData = sortedData.map((item)=>({
     source: item?.source,
-    amount: item?.amount,
+    amount: Number(item?.amount).toFixed(2),
     month: moment(item?.date).format("MMM"),
   }))
-  // console.log(chartData);
   return chartData;
 }
 
 export const preparedExpenseLineChartData = (data = [])=>{
-  const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    const chartData = sortedData.map((item)=>({
+  const validData = Array.isArray(data) ? data : [];
+  const sortedData = [...validData].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const chartData = sortedData.map((item)=>({
     category:item?.category,
-    amount:item?.amount,
+    amount:Number(item?.amount).toFixed(2),
     month: moment(item?.date).format("MMM"),
   }))
-  // console.log(chartData);
   return chartData;
 }
 

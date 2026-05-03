@@ -31,5 +31,9 @@ export const API_PATH={
     },
     IMAGE:{
         UPLOAD_IMAGE: "api/v1/auth/upload-image"
+    },
+    AI:{
+        CHAT: "api/v1/ai/chat",
+        SUMMARY: "api/v1/ai/summary"
     }
 }

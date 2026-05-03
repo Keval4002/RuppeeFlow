@@ -11,12 +11,14 @@ import ExpenseList from '../../components/Expense/ExpenseList';
 import DeleteAlert from '../../components/DeleteAlert';
 import DeleteByIntervalAlert from '../../components/DeleteByIntervalAlert';
 
+import { appCache, clearAppCache } from '../../utils/dataCache';
+
 function Expense() {
 
   useUserAuth();
 
   const [openAddExpenseModal,setOpenAddExpenseModal] = useState(false); 
-  const [expenseData, setExpenseData] = useState([]);
+  const [expenseData, setExpenseData] = useState(appCache.expenseData || []);
   const [loading,setLoading] = useState(false);
   const [openDeleteAlert, setOpenDeleteAlert] = useState({
     show:false, 
@@ -25,7 +27,8 @@ function Expense() {
   const [openDeleteByIntervalModal, setOpenDeleteByIntervalModal] = useState(false);
   
   //Get all expense details
-  const fetchExpenseDetails = async ()=>{
+  const fetchExpenseDetails = async (force = false)=>{
+    if(!force && appCache.expenseData) return;
     if(loading) return;
 
     setLoading(true);
@@ -34,7 +37,8 @@ function Expense() {
       const response = await axiosInstance.get(`${API_PATH.EXPENSE.GET_ALL_EXPENSE}`);
 
       if(response.data){
-        setExpenseData(response.data)
+        setExpenseData(response.data);
+        appCache.expenseData = response.data;
       }
     } catch (error) {
       console.log("Something went wrong. Please try again.", error);
@@ -67,7 +71,8 @@ function Expense() {
 
       setOpenAddExpenseModal(false);
       toast.success("Expense added successfully");
-      fetchExpenseDetails();
+      clearAppCache();
+      fetchExpenseDetails(true);
     } catch(error){
       console.error("Error adding expesne", error.response?.data?.message || error.message)
     }
@@ -78,7 +83,8 @@ function Expense() {
       await axiosInstance.delete(API_PATH.EXPENSE.DELETE_EXPENSE(id));
       setOpenDeleteAlert({show:false, data:null});
       toast.success("Deleted expense detail.")
-      fetchExpenseDetails();
+      clearAppCache();
+      fetchExpenseDetails(true);
     } catch (error) {
       console.error("Error deleting the detail : ", error.response?.data?.message || error.message);
     }
@@ -91,7 +97,8 @@ function Expense() {
       });
       setOpenDeleteByIntervalModal(false);
       toast.success(response.data.message);
-      fetchExpenseDetails();
+      clearAppCache();
+      fetchExpenseDetails(true);
     } catch (error) {
       console.error("Error deleting expenses:", error);
       toast.error(error.response?.data?.message || "Failed to delete expenses");
@@ -125,6 +132,9 @@ function Expense() {
 
   useEffect(()=>{
     fetchExpenseDetails();
+    const handleUpdate = () => fetchExpenseDetails(true);
+    window.addEventListener('app-data-updated', handleUpdate);
+    return () => window.removeEventListener('app-data-updated', handleUpdate);
   }, []);
 
   return (

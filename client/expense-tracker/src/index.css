@@ -1,43 +1,160 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Rubik:wght@300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
 @import "tailwindcss";
 
-@theme{
-  --font-display:"Poppins", "Sans-serif";
-  --breakpoint-3xl:1920px;
-  --color-primary:#875cf5;
+@theme {
+  --font-display: "DM Sans", "Sans-serif";
+  --breakpoint-3xl: 1920px;
+  --color-primary: #C8F73A;
+  --color-accent-lime: #C8F73A;
+  --color-accent-pink: #FF3DAC;
+  --color-accent-yellow: #FFE600;
+  --color-accent-blue: #3DBAFF;
+  --color-gullak-bg: #F7F8FA;
+  --color-gullak-card: #FFFFFF;
+  --color-gullak-border: #EAEEF5;
 }
 
-@layer base{
-  html{
+/* ── Keyframes ─────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pillFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-10px) rotate(3deg); }
+  66%       { transform: translateY(-5px) rotate(-2deg); }
+}
+@keyframes blobPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.06); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes bounceBadge {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.12); }
+}
+
+/* ── Base ───────────────────────────────────────────────── */
+@layer base {
+  html {
     font-family: var(--font-display);
   }
-  body{
-    background-color: #fcfbfc;
+  body {
+    background-color: #F7F8FA;
     overflow-x: hidden;
+    color: #111111;
+  }
+  * {
+    box-sizing: border-box;
   }
 }
 
-.input-box{
-  @apply w-full flex justify-between gap-3 text-sm text-black bg-slate-100 rounded px-4 py-3 mb-4 mt-3 border border-slate-200 outline-none;
+/* ── Utility animations ─────────────────────────────────── */
+.animate-fadeSlideUp {
+  animation: fadeSlideUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-pillFloat {
+  animation: pillFloat 6s ease-in-out infinite;
+}
+.animate-blobPulse {
+  animation: blobPulse 4s ease-in-out infinite;
+}
+.animate-bounceBadge {
+  animation: bounceBadge 2s ease-in-out infinite;
 }
 
-.btn-primary{
-  @apply w-full text-sm font-medium text-white bg-violet-500 shadow-lg shadow-purple-600/5 p-[10px] rounded-md my-1 hover:bg-purple-600/15 hover:text-purple-600;
+/* ── Cards ──────────────────────────────────────────────── */
+.card {
+  @apply bg-white p-6 rounded-[28px] border border-[#EAEEF5];
+  box-shadow: 0 2px 24px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.card:hover {
+  box-shadow: 0 8px 36px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
 }
 
-.card{
-  @apply bg-white p-6 rounded-2xl shadow-md shadow-gray-100 border border-gray-200/5 ;
+/* ── Pill Info Cards ────────────────────────────────────── */
+.pill-card {
+  @apply relative overflow-hidden p-6 rounded-[28px];
+  background: #FFFFFF;
+  border: 1.5px solid #EAEEF5;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.05);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.pill-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
 }
 
-.card-btn{
-  @apply flex items-center gap-3 text-[12px] font-medium text-gray-700 hover:text-purple-500 bg-gray-50 hover:bg-purple-50 px-4 py-1.5 rounded-lg border border-gray-200/50 cursor-pointer
+/* ── Buttons ────────────────────────────────────────────── */
+.btn-primary {
+  @apply w-full text-sm font-semibold text-black rounded-full py-3 px-6 my-1;
+  background: #C8F73A;
+  box-shadow: 0 4px 20px rgba(200, 247, 58, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.btn-primary:hover {
+  background: #b8e82a;
+  box-shadow: 0 6px 28px rgba(200, 247, 58, 0.5);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
 }
 
-.add-btn{
-  @apply flex items-center gap-1.5 text-xs md:text-sm font-medium text-purple-600 whitespace-nowrap bg-purple-50 border border-purple-100 rounded-lg px-4 py-2 cursor-pointer; 
+/* ── Inputs ─────────────────────────────────────────────── */
+.input-box {
+  @apply w-full flex justify-between gap-3 text-sm text-gray-800 bg-[#F4F6FA] rounded-2xl px-4 py-3 mb-4 mt-2 border border-[#E5E9F2] outline-none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-box:focus-within {
+  border-color: #C8F73A;
+  box-shadow: 0 0 0 3px rgba(200, 247, 58, 0.2);
 }
 
-.add-btn-fill{
-  @apply text-white bg-primary
+/* ── Card Buttons ───────────────────────────────────────── */
+.card-btn {
+  @apply flex items-center gap-2 text-[12px] font-semibold text-gray-600 hover:text-black bg-gray-50 hover:bg-[#F0FBD0] px-4 py-2 rounded-full border border-gray-200 cursor-pointer;
+  transition: all 0.2s ease;
+}
+.card-btn:hover {
+  border-color: #C8F73A;
 }
 
+/* ── Add Buttons ────────────────────────────────────────── */
+.add-btn {
+  @apply flex items-center gap-1.5 text-xs md:text-sm font-semibold text-black whitespace-nowrap rounded-full px-5 py-2.5 cursor-pointer border-0;
+  background: #C8F73A;
+  box-shadow: 0 3px 14px rgba(200, 247, 58, 0.4);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 20px rgba(200, 247, 58, 0.55);
+}
+.add-btn-fill {
+  @apply text-black bg-[#C8F73A];
+}
+
+/* ── Neon accent badge pills ────────────────────────────── */
+.badge-lime   { @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-[#F0FBD0] text-[#5A8000]; }
+.badge-pink   { @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-[#FFE4F5] text-[#C00080]; }
+.badge-yellow { @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-[#FFF9CC] text-[#8A6E00]; }
+.badge-blue   { @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-[#E0F5FF] text-[#005E8A]; }
+
+/* ── Playful blob shapes (SVG/div decorations) ──────────── */
+.art-blob {
+  position: absolute;
+  border-radius: 60% 40% 50% 50% / 50% 60% 40% 50%;
+  opacity: 0.18;
+  pointer-events: none;
+}
+.art-pill {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}

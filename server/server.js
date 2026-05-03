@@ -12,6 +12,8 @@ import incomeRoutes from './routes/incomeRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import bulkRoutes from './routes/bulkRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
+import { startSummaryScheduler } from './services/summaryScheduler.js';
 
 dotenv.config();
 
@@ -21,6 +23,9 @@ const __dirname = path.dirname(__filename);
 
 // Connect MongoDB
 connectDB();
+
+// Start background schedulers
+startSummaryScheduler();
 
 // Middleware
 app.use(express.json());
@@ -40,6 +45,7 @@ app.use("/api/v1/income", incomeRoutes);
 app.use("/api/v1/expense", expenseRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/bulk", bulkRoutes);
+app.use("/api/v1/ai", aiRoutes);
 
 // Basic root route for visibility
 app.get("/", (req, res) => {

@@ -1,25 +1,27 @@
-import React, {useContext} from 'react'
-import {UserContext} from '../../context/userContext';
+import React, { useContext } from 'react'
+import { UserContext } from '../../context/userContext';
 import Navbar from './Navbar'
 import SideMenu from './SideMenu'
+import AIChat from '../Dashboard/AIChat'
 
-function DashboardLayout({activeMenu, children}) {
-    const {user} = useContext(UserContext);
+function DashboardLayout({ activeMenu, children }) {
+  const { user } = useContext(UserContext);
   return (
-    <div>
-        <Navbar activeMenu={activeMenu}/>
+    <div style={{ minHeight: '100vh', background: '#F7F8FA' }}>
+      <Navbar activeMenu={activeMenu} />
 
-        {user && (
-            <div className='flex'>
-                <div className='max-[1080px]:hidden'>
-                    <SideMenu activeMenu={activeMenu}/>
-                </div>
+      {user && (
+        <div style={{ display: 'flex' }}>
+          <div className='hidden lg:block'>
+            <SideMenu activeMenu={activeMenu} />
+          </div>
 
-                <div className='grow mx-5'>
-                    {children}
-                </div>
-            </div>
-        )}
+          <div style={{ flex: 1, padding: '24px 28px', maxWidth: 1400 }}>
+            {children}
+          </div>
+        </div>
+      )}
+      <AIChat />
     </div>
   )
 }

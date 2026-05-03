@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { LuUpload, LuDownload, LuX } from 'react-icons/lu'
+import { LuUpload, LuDownload, LuX, LuCheck } from 'react-icons/lu'
 import axiosInstance from '../utils/axiosInstance'
 
 function ExcelUpload({ type = 'combined', onClose, onSuccess }) {
@@ -27,10 +27,24 @@ function ExcelUpload({ type = 'combined', onClose, onSuccess }) {
 
   const handleDownloadTemplate = async () => {
     try {
-      const endpoint = type === 'combined' ? '/api/v1/bulk/downloadTemplate' : 
-                       type === 'expense' ? '/api/v1/expense/downloadExcel' : '/api/v1/income/downloadExcel'
-      const response = await axiosInstance.get(endpoint)
-      // The file will be automatically downloaded by the browser
+      const endpoint = type === 'combined' ? '/api/v1/bulk/downloadTemplate' :
+        type === 'expense' ? '/api/v1/expense/downloadExcel' : '/api/v1/income/downloadExcel'
+      const response = await axiosInstance.get(endpoint, { responseType: 'blob' })
+
+      const defaultFileName = type === 'combined'
+        ? 'template.xlsx'
+        : type === 'expense'
+          ? 'expense-template.xlsx'
+          : 'income-template.xlsx'
+
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.setAttribute('download', defaultFileName)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(blobUrl)
     } catch (err) {
       setError('Failed to download template')
     }
@@ -42,38 +56,97 @@ function ExcelUpload({ type = 'combined', onClose, onSuccess }) {
       return
     }
 
-    setLoading(true)
-    setError(null)
-    setUploadResult(null)
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const endpoint = type === 'combined' ? '/api/v1/bulk/uploadExcel' :
-                       type === 'expense' ? '/api/v1/expense/uploadExcel' : '/api/v1/income/uploadExcel'
-      const response = await axiosInstance.post(endpoint, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+    // Frontend validation for Excel file before upload
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target.result)
+        const xlsx = await import('xlsx')
+        const workbook = xlsx.read(data, { type: 'array' })
+        const sheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[sheetName]
+        const rows = xlsx.utils.sheet_to_json(worksheet)
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i]
+          // Validate Amount
+          if (row.Amount === undefined || isNaN(row.Amount) || Number(row.Amount) <= 0) {
+            setError(`Row ${i + 2}: Amount must be a valid positive number.`)
+            return
+          }
+          // Validate Amount decimals
+          if (String(row.Amount).includes('.') && String(row.Amount).split('.')[1].length > 2) {
+            setError(`Row ${i + 2}: Amount can have at most 2 decimal places.`)
+            return
+          }
+          // Validate Date — Excel stores dates as numeric serials; use xlsx to parse them
+          if (row.Date === undefined || row.Date === null || row.Date === '') {
+            setError(`Row ${i + 2}: Date must be a valid date.`)
+            return
+          }
+          let dateValid = false
+          if (typeof row.Date === 'number') {
+            // Excel serial date — parse via xlsx
+            try {
+              const parsed = xlsx.SSF.parse_date_code(row.Date)
+              dateValid = !!(parsed && parsed.y)
+            } catch { dateValid = false }
+          } else {
+            dateValid = !isNaN(new Date(row.Date).getTime())
+          }
+          if (!dateValid) {
+            setError(`Row ${i + 2}: Date must be a valid date.`)
+            return
+          }
+          // Only Icon column can have emoji/strings, others should not
+          for (const key of Object.keys(row)) {
+            if (key.toLowerCase().includes('icon')) continue
+            if (
+              typeof row[key] === 'string' &&
+              key !== 'Date' &&
+              key !== 'Type' &&
+              key !== 'Name' &&
+              key !== 'Category' &&
+              key !== 'Source'
+            ) {
+              setError(`Row ${i + 2}: Unexpected string in column ${key}.`)
+              return
+            }
+          }
         }
-      })
-
-      setUploadResult(response.data)
-      setFile(null)
-      
-      // Reset file input
-      const fileInput = document.querySelector('input[type="file"]')
-      if (fileInput) fileInput.value = ''
-
-      // Call success callback
-      if (onSuccess) {
-        setTimeout(onSuccess, 1500)
+      } catch (err) {
+        setError(`File validation failed: ${err.message || 'Unknown error'}`)
+        return
       }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to upload file')
-    } finally {
-      setLoading(false)
+
+      setLoading(true)
+      setError(null)
+      setUploadResult(null)
+
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const endpoint = type === 'combined' ? '/api/v1/bulk/uploadExcel' :
+          type === 'expense' ? '/api/v1/expense/uploadExcel' : '/api/v1/income/uploadExcel'
+        const response = await axiosInstance.post(endpoint, formData)
+        setUploadResult(response.data)
+        setFile(null)
+
+        // Reset file input
+        const fileInput = document.querySelector('input[type="file"]')
+        if (fileInput) fileInput.value = ''
+
+        // Call success callback
+        if (onSuccess) {
+          setTimeout(onSuccess, 1500)
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to upload file')
+      } finally {
+        setLoading(false)
+      }
     }
+    reader.readAsArrayBuffer(file)
   }
 
   const getExcelTemplate = () => {
@@ -107,180 +180,277 @@ function ExcelUpload({ type = 'combined', onClose, onSuccess }) {
   }
 
   const template = getExcelTemplate()
-  const title = type === 'combined' ? 'Import Income & Expenses' : 
-                type === 'expense' ? 'Import Expenses' : 'Import Income'
+  const title = type === 'combined' ? 'Import Income & Expenses' :
+    type === 'expense' ? 'Import Expenses' : 'Import Income'
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-      <div className='bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto'>
-        {/* Header */}
-        <div className='flex justify-between items-center mb-6 sticky top-0 bg-white pb-3 border-b'>
-          <h2 className='text-2xl font-bold text-gray-900'>
-            {title}
-          </h2>
-          <button onClick={onClose} className='text-gray-500 hover:text-gray-700'>
-            <LuX size={24} />
-          </button>
-        </div>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 50,
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      background: 'rgba(0,0,0,0.25)',
+      backdropFilter: 'blur(4px)',
+    }}>
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: 640,
+        margin: '0 16px', maxHeight: '90vh', overflowY: 'auto',
+        animation: 'fadeSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both',
+      }}>
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: 28,
+          boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+          border: '1.5px solid #EAEEF5',
+          overflow: 'hidden',
+          display: 'flex', flexDirection: 'column'
+        }}>
+          {/* Rainbow top stripe */}
+          <div style={{
+            height: 4,
+            background: 'linear-gradient(90deg, #C8F73A, #FFE600, #FF3DAC, #3DBAFF)',
+            flexShrink: 0
+          }} />
 
-        {/* Upload Result */}
-        {uploadResult && (
-          <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg'>
-            <div className='flex items-center gap-2 mb-2'>
-              <LuCheck className='text-green-600' size={20} />
-              <h3 className='font-semibold text-green-900'>{uploadResult.message}</h3>
-            </div>
-            <p className='text-sm text-green-800'>
-              Total rows processed: {uploadResult.totalRows} | Successfully imported: {uploadResult.successCount}
-            </p>
-            {uploadResult.errors && uploadResult.errors.length > 0 && (
-              <div className='mt-3 max-h-40 overflow-y-auto'>
-                <p className='text-sm font-semibold text-orange-900 mb-2'>Issues found:</p>
-                <ul className='text-sm text-orange-800 space-y-1'>
-                  {uploadResult.errors.map((err, idx) => (
-                    <li key={idx} className='flex gap-2'>
-                      <span>•</span>
-                      <span>{err}</span>
-                    </li>
-                  ))}
-                </ul>
+          {/* Header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '20px 24px 16px',
+            borderBottom: '1px solid #EAEEF5',
+            position: 'sticky', top: 0, background: '#fff', zIndex: 10
+          }}>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>{title}</h3>
+
+            <button
+              onClick={onClose}
+              style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: '#F4F6FA', border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#666', fontSize: 14, transition: 'background 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#FFE4F5'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F4F6FA'}
+            >
+              <LuX />
+            </button>
+          </div>
+
+          <div style={{ padding: '24px', overflowY: 'auto' }}>
+            {/* Upload Result */}
+            {uploadResult && (
+              <div style={{
+                marginBottom: 24, padding: '16px',
+                background: '#F0FBD0', border: '1px solid #C8F73A40', borderRadius: 20,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#C8F73A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111' }}>
+                    <LuCheck size={14} />
+                  </div>
+                  <h3 style={{ fontWeight: 700, color: '#4A6E00', fontSize: 14 }}>{uploadResult.message}</h3>
+                </div>
+                <p style={{ fontSize: 13, color: '#5A8000' }}>
+                  Total rows processed: {uploadResult.totalRows} | Successfully imported: {uploadResult.successCount}
+                </p>
+                {uploadResult.errors && uploadResult.errors.length > 0 && (
+                  <div style={{ marginTop: 12, maxHeight: 160, overflowY: 'auto' }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#C00080', marginBottom: 8 }}>Issues found:</p>
+                    <ul style={{ fontSize: 13, color: '#FF3DAC', listStyle: 'none', padding: 0, margin: 0 }}>
+                      {uploadResult.errors.map((err, idx) => (
+                        <li key={idx} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                          <span>•</span>
+                          <span>{err}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
-        {/* Error Message */}
-        {error && (
-          <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3'>
-            <span className='text-red-600 flex-shrink-0 mt-0.5 text-xl'>⚠️</span>
-            <p className='text-sm text-red-800'>{error}</p>
-          </div>
-        )}
-
-        {/* Format Information */}
-        <div className='mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg'>
-          <button
-            onClick={() => setShowFormatInfo(!showFormatInfo)}
-            className='w-full text-left flex items-center justify-between font-semibold text-blue-900 hover:text-blue-700'
-          >
-            <span>📋 Excel File Format Required</span>
-            <span className='text-lg'>{showFormatInfo ? '▼' : '▶'}</span>
-          </button>
-          
-          {showFormatInfo && (
-            <div className='mt-4 space-y-3'>
-              <div>
-                <p className='font-semibold text-gray-800 mb-2'>Required Columns:</p>
-                <div className='flex flex-wrap gap-2'>
-                  {template.columns.map((col, idx) => (
-                    <span key={idx} className='bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-medium'>
-                      {col}
-                    </span>
-                  ))}
-                </div>
+            {/* Error Message */}
+            {error && (
+              <div style={{
+                marginBottom: 24, padding: '14px 16px',
+                background: '#FFE4F5', border: '1px solid #FF3DAC40', borderRadius: 20,
+                display: 'flex', alignItems: 'flex-start', gap: 12,
+              }}>
+                <span style={{ fontSize: 20 }}>⚠️</span>
+                <p style={{ fontSize: 13, color: '#C00080', lineHeight: 1.5, marginTop: 2 }}>{error}</p>
               </div>
-              <div>
-                <p className='font-semibold text-gray-800 mb-2'>Example Data:</p>
-                <div className='bg-white border border-blue-200 rounded overflow-x-auto'>
-                  <table className='w-full text-sm'>
-                    <thead>
-                      <tr className='bg-blue-100 border-b'>
-                        {template.columns.map((col, idx) => (
-                          <th key={idx} className='px-3 py-2 text-left text-gray-700 font-semibold'>
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {template.example.map((row, rowIdx) => (
-                        <tr key={rowIdx} className='border-b hover:bg-gray-50'>
-                          {template.columns.map((col, colIdx) => {
-                            const key = col.split(' (')[0]
-                            return (
-                              <td key={colIdx} className='px-3 py-2 text-gray-700'>
-                                {row[key] || '-'}
-                              </td>
-                            )
-                          })}
-                        </tr>
+            )}
+
+            {/* Format Information */}
+            <div style={{
+              marginBottom: 24, padding: '16px',
+              background: '#F7F8FA', border: '1px solid #EAEEF5', borderRadius: 20,
+            }}>
+              <button
+                onClick={() => setShowFormatInfo(!showFormatInfo)}
+                style={{
+                  width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  fontWeight: 700, color: '#111', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>📋</span> Excel File Format Required
+                </div>
+                <span style={{ fontSize: 14, color: '#888' }}>{showFormatInfo ? '▼' : '▶'}</span>
+              </button>
+
+              {showFormatInfo && (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <p style={{ fontWeight: 700, color: '#555', fontSize: 13, marginBottom: 8 }}>Required Columns:</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {template.columns.map((col, idx) => (
+                        <span key={idx} style={{
+                          background: '#E0F5FF', color: '#005E8A', padding: '4px 12px',
+                          borderRadius: 999, fontSize: 12, fontWeight: 600,
+                        }}>
+                          {col}
+                        </span>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ fontWeight: 700, color: '#555', fontSize: 13, marginBottom: 8 }}>Example Data:</p>
+                    <div style={{ background: '#fff', border: '1px solid #EAEEF5', borderRadius: 12, overflowX: 'auto' }}>
+                      <table style={{ width: '100%', fontSize: 13, textAlign: 'left', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: '#F7F8FA', borderBottom: '1px solid #EAEEF5' }}>
+                            {template.columns.map((col, idx) => (
+                              <th key={idx} style={{ padding: '10px 12px', color: '#111', fontWeight: 700 }}>
+                                {col}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {template.example.map((row, rowIdx) => (
+                            <tr key={rowIdx} style={{ borderBottom: '1px solid #EAEEF5' }}>
+                              {template.columns.map((col, colIdx) => {
+                                const key = col.split(' (')[0]
+                                return (
+                                  <td key={colIdx} style={{ padding: '10px 12px', color: '#555' }}>
+                                    {row[key] || '-'}
+                                  </td>
+                                )
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div style={{ background: '#FFF9CC', border: '1px solid #FFE600', borderRadius: 16, padding: '12px 16px', marginTop: 16 }}>
+                    <p style={{ fontSize: 13, color: '#8A6E00', fontWeight: 700, marginBottom: 8 }}>📝 Notes:</p>
+                    <ul style={{ fontSize: 13, color: '#6A5000', margin: 0, paddingLeft: 20, lineHeight: 1.6 }}>
+                      {type === 'combined' ? (
+                        <>
+                          <li>Headers must be in the first row exactly as shown above</li>
+                          <li>Type column: Enter either "Income" or "Expense"</li>
+                          <li>Name/Category field cannot be empty</li>
+                          <li>Amount must be a positive number</li>
+                          <li>Date format: YYYY-MM-DD or any valid date format</li>
+                          <li>Icon column is optional</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>Headers must be in the first row exactly as shown above</li>
+                          <li>{type === 'expense' ? 'Category' : 'Source'} field cannot be empty</li>
+                          <li>Amount must be a positive number</li>
+                          <li>Date format: YYYY-MM-DD or any valid date format (e.g., 2024-01-15)</li>
+                          <li>Icon column is optional - you can leave it empty</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-              <div className='bg-yellow-50 border border-yellow-200 rounded p-3 mt-3'>
-                <p className='text-sm text-yellow-800'>
-                  <strong>📝 Notes:</strong>
-                  <ul className='list-disc list-inside mt-2 space-y-1'>
-                    {type === 'combined' ? (
-                      <>
-                        <li>Headers must be in the first row exactly as shown above</li>
-                        <li>Type column: Enter either "Income" or "Expense"</li>
-                        <li>Name/Category field cannot be empty</li>
-                        <li>Amount must be a positive number</li>
-                        <li>Date format: YYYY-MM-DD or any valid date format</li>
-                        <li>Icon column is optional</li>
-                      </>
-                    ) : (
-                      <>
-                        <li>Headers must be in the first row exactly as shown above</li>
-                        <li>{type === 'expense' ? 'Category' : 'Source'} field cannot be empty</li>
-                        <li>Amount must be a positive number</li>
-                        <li>Date format: YYYY-MM-DD or any valid date format (e.g., 2024-01-15)</li>
-                        <li>Icon column is optional - you can leave it empty</li>
-                      </>
-                    )}
-                  </ul>
-                </p>
-              </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* File Upload Area */}
-        <div className='mb-6'>
-          <label className='block mb-3'>
-            <div className='border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer'>
-              <div className='flex justify-center mb-3'>
-                <LuUpload className='text-gray-400 text-3xl' />
-              </div>
-              <p className='text-gray-700 font-medium mb-1'>Click to upload or drag and drop</p>
-              <p className='text-gray-500 text-sm'>.xlsx or .xls files only</p>
-              {file && <p className='text-green-600 text-sm mt-2 font-semibold'>✓ {file.name}</p>}
+            {/* File Upload Area */}
+            <div style={{ marginBottom: 8 }}>
+              <label style={{ display: 'block' }}>
+                <div style={{
+                  border: '2px dashed #C8F73A', borderRadius: 24, padding: '32px 24px',
+                  textAlign: 'center', background: '#F0FBD0', cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#E6F9B0'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#F0FBD0'}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                    <div style={{
+                      width: 56, height: 56, borderRadius: '50%', background: '#C8F73A',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111',
+                    }}>
+                      <LuUpload size={24} />
+                    </div>
+                  </div>
+                  <p style={{ color: '#111', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Click to upload or drag and drop</p>
+                  <p style={{ color: '#6A7A40', fontSize: 13 }}>.xlsx or .xls files only</p>
+                  {file && <p style={{ color: '#4A6E00', fontSize: 14, marginTop: 12, fontWeight: 800 }}>✓ {file.name}</p>}
+                </div>
+                <input
+                  type='file'
+                  accept='.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+              </label>
             </div>
-            <input
-              type='file'
-              accept='.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
-              onChange={handleFileChange}
-              className='hidden'
-            />
-          </label>
-        </div>
+          </div>
 
-        {/* Action Buttons */}
-        <div className='flex gap-3 justify-end sticky bottom-0 bg-white pt-3 border-t'>
-          <button
-            onClick={handleDownloadTemplate}
-            className='flex items-center gap-2 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium'
-          >
-            <LuDownload size={18} />
-            Download Template
-          </button>
-          <button
-            onClick={onClose}
-            className='px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium'
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleUpload}
-            disabled={!file || loading || uploadResult}
-            className='flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition font-medium'
-          >
-            <LuUpload size={18} />
-            {loading ? 'Uploading...' : 'Upload'}
-          </button>
+          {/* Action Buttons */}
+          <div style={{
+            display: 'flex', gap: 12, justifyContent: 'flex-end',
+            padding: '16px 24px 24px', background: '#fff',
+            borderTop: '1px solid #EAEEF5',
+          }}>
+            <button
+              onClick={handleDownloadTemplate}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
+                border: '1.5px solid #EAEEF5', background: '#fff', color: '#555',
+                borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#F7F8FA'}
+              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+            >
+              <LuDownload size={16} />
+              Template
+            </button>
+            <div style={{ flex: 1 }} />
+            <button
+              onClick={onClose}
+              style={{
+                padding: '10px 20px', border: '1.5px solid #EAEEF5', background: '#fff', color: '#555',
+                borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#F7F8FA'}
+              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUpload}
+              disabled={!file || loading || uploadResult}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 24px',
+                border: 'none', background: (!file || loading || uploadResult) ? '#ddd' : '#C8F73A',
+                color: (!file || loading || uploadResult) ? '#888' : '#111',
+                borderRadius: 999, fontSize: 13, fontWeight: 800,
+                cursor: (!file || loading || uploadResult) ? 'not-allowed' : 'pointer',
+                boxShadow: (!file || loading || uploadResult) ? 'none' : '0 4px 16px rgba(200,247,58,0.4)',
+                transition: 'transform 0.18s ease',
+              }}
+              onMouseEnter={e => { if (!file && !loading && !uploadResult) e.currentTarget.style.transform = 'translateY(-1px)' }}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              <LuUpload size={16} />
+              {loading ? 'Uploading...' : 'Upload'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

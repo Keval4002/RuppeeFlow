@@ -1,10 +1,24 @@
 import React from 'react'
-import {getInitials} from '../../utils/helper'
+import { getInitials } from '../../utils/helper'
 
-function CharAvatar({fullName, width, height, style}) {
+function CharAvatar({ fullName, width, height, style }) {
   return (
-    <div className={`${width||'w-12'} ${height||'h-12'} ${style||''} flex items-center justify-center rounded-full text-gray-900 font-medium bg-gray-100`}>
-        {getInitials(fullName||"")}
+    <div
+      style={{
+        width: width ? undefined : 48,
+        height: height ? undefined : 48,
+        background: 'linear-gradient(135deg, #C8F73A 0%, #FFE600 100%)',
+        borderRadius: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#111',
+        fontWeight: 800,
+        fontSize: style ? undefined : 18,
+      }}
+      className={`${width || ''} ${height || ''} ${style || ''}`}
+    >
+      {getInitials(fullName || "")}
     </div>
   )
 }

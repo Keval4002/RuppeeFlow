@@ -1,41 +1,51 @@
 import React from 'react'
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Area, AreaChart } from 'recharts'
 
-function CustomLineChart({data}) {
+function CustomLineChart({ data }) {
 
-    const CustomTooltip = ({active, payload})=>{
-        if(active && payload && payload.length){
-            return (
-                <div className='bg-white shadow-md rounded-lg p-2 border border-gray-300'>
-                    <p className='text-xs font-semibold text-purple-800 mb-1'>{payload[0].payload.category}</p>
-                    <p className='text-sm text-gray-600'>
-                        Amount: <span className='text-sm font-medium text-gray-900'>{payload[0].payload.amount}</span>
-                    </p>
-                </div>
-            )
-        }
-        return null;
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          background: '#111', borderRadius: 12, padding: '8px 14px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: '#FF3DAC', marginBottom: 4 }}>{payload[0].payload.category}</p>
+          <p style={{ fontSize: 13, color: '#fff' }}>
+            ₹<span style={{ fontWeight: 700 }}>{Number(payload[0].payload.amount).toFixed(2)}</span>
+          </p>
+        </div>
+      )
     }
+    return null;
+  }
+
   return (
-    <div className='bg-white'>
-        <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={data}>
-                <defs>
-                    <linearGradient id='incomeGradient' x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor='#875CF5' stopOpacity={0.4} />
-                        <stop offset="95%" stopColor='#875CF5' stopOpacity={0} />
-                    </linearGradient> 
-                </defs>
+    <div style={{ background: 'transparent' }}>
+      <ResponsiveContainer width="100%" height={280}>
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id='expenseGradient' x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor='#FF3DAC' stopOpacity={0.25} />
+              <stop offset="95%" stopColor='#FF3DAC' stopOpacity={0} />
+            </linearGradient>
+          </defs>
 
-                <CartesianGrid stroke='none'/>
-                <XAxis dataKey="month" tick={{fontSize:12, fill:'#555'}} stroke='none'/>
-                <YAxis tick={{fontSize:12, fill:'#555'}} stroke='none'/>
-                <Tooltip content={<CustomTooltip/>}/>
+          <CartesianGrid stroke='#EAEEF5' strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#999', fontWeight: 500 }} stroke='none' />
+          <YAxis tick={{ fontSize: 11, fill: '#999' }} stroke='none' />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#FF3DAC40', strokeWidth: 1 }} />
 
-                <Area type="monotone" dataKey="amount" stroke='#875CF5' fill='url(#incomeGradient)' strokeWidth={3} dot={{r:3, fill:"#AB8DF8"}}/>
-
-            </AreaChart>
-        </ResponsiveContainer>
+          <Area
+            type="monotone"
+            dataKey="amount"
+            stroke='#FF3DAC'
+            fill='url(#expenseGradient)'
+            strokeWidth={2.5}
+            dot={{ r: 4, fill: "#FF3DAC", strokeWidth: 2, stroke: '#fff' }}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   )
 }

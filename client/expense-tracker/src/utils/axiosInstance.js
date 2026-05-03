@@ -2,7 +2,7 @@ import axios from "axios"
 
 const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    timeout: 10000,
+    timeout: 30000, // increased for large file uploads
     headers:{
         "Content-Type":"application/json",
         Accept: "application/json"
@@ -14,6 +14,12 @@ axiosInstance.interceptors.request.use(
         const accessToken = localStorage.getItem("token");
         if(accessToken){
             config.headers.Authorization = `Bearer ${accessToken}`
+        }
+        // When sending FormData, remove the hardcoded Content-Type so the
+        // browser can set it automatically with the correct multipart boundary.
+        // Without this, the server never receives the uploaded file.
+        if(config.data instanceof FormData){
+            delete config.headers["Content-Type"];
         }
         return config;
     },
@@ -31,9 +37,9 @@ axiosInstance.interceptors.response.use(
         if(error.response){
             if(error.response.status === 401){
                 window.location.href = "/login";
+            } else if(error.response.status === 500){
+                console.error("Server error. Please try again later.");
             }
-        } else if(error.response.status === 500){
-            console.error("Server error. Please try again later.");
         } else if(error.code === "ECONNABORTED"){
             console.error("Request timeout. Please try again");
         }

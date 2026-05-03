@@ -11,12 +11,14 @@ import IncomeList from '../../components/Income/IncomeList';
 import DeleteAlert from '../../components/DeleteAlert'
 import DeleteByIntervalAlert from '../../components/DeleteByIntervalAlert'
 
+import { appCache, clearAppCache } from '../../utils/dataCache';
+
 function Income() {
 
   useUserAuth();
 
   const [openAddIncomeModal,setOpenAddIncomeModal] = useState(false); 
-  const [incomeData, setIncomeData] = useState([]);
+  const [incomeData, setIncomeData] = useState(appCache.incomeData || []);
   const [loading,setLoading] = useState(false);
   const [openDeleteAlert, setOpenDeleteAlert] = useState({
     show:false, 
@@ -25,7 +27,8 @@ function Income() {
   const [openDeleteByIntervalModal, setOpenDeleteByIntervalModal] = useState(false);
 
   //Get all income details
-  const fetchIncomeDetails = async ()=>{
+  const fetchIncomeDetails = async (force = false)=>{
+    if(!force && appCache.incomeData) return;
     if(loading) return;
 
     setLoading(true);
@@ -34,7 +37,8 @@ function Income() {
       const response = await axiosInstance.get(`${API_PATH.INCOME.GET_ALL_INCOME}`);
 
       if(response.data){
-        setIncomeData(response.data)
+        setIncomeData(response.data);
+        appCache.incomeData = response.data;
       }
     } catch (error) {
       console.log("Something went wrong. Please try again.", error);
@@ -66,7 +70,8 @@ function Income() {
 
         setOpenAddIncomeModal(false);
         toast.success("Income added successfully");
-        fetchIncomeDetails();
+        clearAppCache();
+        fetchIncomeDetails(true);
       } catch(error){
         console.error("Error adding income", error.response?.data?.message || error.message)
       }
@@ -77,7 +82,8 @@ function Income() {
         await axiosInstance.delete(API_PATH.INCOME.DELETE_INCOME(id));
         setOpenDeleteAlert({show:false, data:null});
         toast.success("Deleted income detail.")
-        fetchIncomeDetails();
+        clearAppCache();
+        fetchIncomeDetails(true);
       } catch (error) {
         console.error("Error deleting the detail : ", error.response?.data?.message || error.message);
       }
@@ -90,7 +96,8 @@ function Income() {
       });
       setOpenDeleteByIntervalModal(false);
       toast.success(response.data.message);
-      fetchIncomeDetails();
+      clearAppCache();
+      fetchIncomeDetails(true);
     } catch (error) {
       console.error("Error deleting income:", error);
       toast.error(error.response?.data?.message || "Failed to delete income");
@@ -125,8 +132,9 @@ function Income() {
 
   useEffect(()=>{
     fetchIncomeDetails();
-
-    return ()=>{};
+    const handleUpdate = () => fetchIncomeDetails(true);
+    window.addEventListener('app-data-updated', handleUpdate);
+    return () => window.removeEventListener('app-data-updated', handleUpdate);
   }, [])
 
   return (
