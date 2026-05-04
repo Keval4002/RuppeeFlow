@@ -50,6 +50,11 @@ export const summaryHandler = async (req, res) => {
     const userId = req.user.id;
 
     try {
+        let ctx = await FinancialContext.findOne({ userId });
+        if (!ctx || ctx.needsRecalculation) {
+            ctx = await updateFinancialContext(userId);
+        }
+
         const { summary, fromCache } = await getOrCreateSummary(userId);
         return res.status(200).json({
             success: true,

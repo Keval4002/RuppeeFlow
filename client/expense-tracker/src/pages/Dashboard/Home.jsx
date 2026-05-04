@@ -14,6 +14,7 @@ import ExpenseTransactions from '../../components/Dashboard/ExpenseTransactions'
 import Last30DaysExpenses from '../../components/Dashboard/Last30DaysExpenses';
 import RecentIncomeWithChart from '../../components/Dashboard/RecentIncomeWithChart';
 import RecentIncome from '../../components/Dashboard/RecentIncome';
+import AIInsights from '../../components/Dashboard/AIInsights';
 import { UserContext } from '../../context/userContext';
 
 import { appCache } from '../../utils/dataCache';
@@ -132,6 +133,11 @@ function Home() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* ── AI Insights ────────────────────────────── */}
+        <div style={{ marginBottom: 24 }}>
+          <AIInsights />
         </div>
 
         {/* ── Stat cards ───────────────────────────── */}
