@@ -34,6 +34,7 @@ export const API_PATH={
     },
     AI:{
         CHAT: "api/v1/ai/chat",
-        SUMMARY: "api/v1/ai/summary"
+        SUMMARY: "api/v1/ai/summary",
+        CONTEXT: "api/v1/ai/context"
     }
 }

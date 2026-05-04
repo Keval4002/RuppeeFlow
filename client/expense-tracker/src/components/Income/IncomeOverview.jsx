@@ -27,7 +27,7 @@ function IncomeOverview({ transactions, onAddIncome }) {
         background: '#FFE600', opacity: 0.13, transform: 'rotate(-20deg)',
       }} />
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', position: 'relative', zIndex: 1 }}>
         <div>
           <h5 style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>Income Overview</h5>
           <p style={{ fontSize: 12, color: '#999', marginTop: 3 }}>Track your earnings over time and analyze income trends.</p>

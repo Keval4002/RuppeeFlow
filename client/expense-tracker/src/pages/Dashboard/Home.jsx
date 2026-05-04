@@ -15,6 +15,7 @@ import Last30DaysExpenses from '../../components/Dashboard/Last30DaysExpenses';
 import RecentIncomeWithChart from '../../components/Dashboard/RecentIncomeWithChart';
 import RecentIncome from '../../components/Dashboard/RecentIncome';
 import AIInsights from '../../components/Dashboard/AIInsights';
+import SemanticInsights from '../../components/Dashboard/SemanticInsights';
 import { UserContext } from '../../context/userContext';
 
 import { appCache } from '../../utils/dataCache';
@@ -108,7 +109,7 @@ function Home() {
             </p>
 
             {/* Quick action pills */}
-            <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 16, marginTop: 20, flexWrap: 'wrap' }}>
               <button onClick={() => navigate('/income')} style={{
                 background: '#C8F73A', color: '#111', border: 'none',
                 borderRadius: 999, padding: '8px 20px', fontSize: 13, fontWeight: 700,
@@ -134,6 +135,9 @@ function Home() {
             </div>
           </div>
         </div>
+
+        {/* ── Semantic Insights (Behavioural & Comparative) ── */}
+        <SemanticInsights />
 
         {/* ── AI Insights ────────────────────────────── */}
         <div style={{ marginBottom: 24 }}>

@@ -26,7 +26,7 @@ function ExpenseOverview({ transactions, onAddExpense }) {
         background: '#FF3DAC', opacity: 0.11, transform: 'rotate(15deg)',
       }} />
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', position: 'relative', zIndex: 1 }}>
         <div>
           <h5 style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>Expense Overview</h5>
           <p style={{ fontSize: 12, color: '#999', marginTop: 3 }}>Track spending trends and gain insight on where money goes.</p>

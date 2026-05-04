@@ -7,6 +7,7 @@
 import cron from "node-cron";
 import FinancialContext from "../models/FinancialContext.js";
 import { forceRegenerateSummary } from "./summaryService.js";
+import { updateFinancialContext } from "./financialContextBuilder.js";
 
 /**
  * Finds all users whose summary is stale or flagged for refresh
@@ -37,11 +38,18 @@ const runSummaryRefreshJob = async () => {
 
         // Process in parallel (Groq is fast; limit parallelism if needed for large user bases)
         await Promise.allSettled(
-            staleContexts.map(({ userId }) =>
-                forceRegenerateSummary(userId.toString()).catch((err) =>
-                    console.error(`[SummaryScheduler] ❌ Failed for user ${userId}:`, err.message)
-                )
-            )
+            staleContexts.map(async ({ userId }) => {
+                const uid = userId.toString();
+                try {
+                    const ctx = await FinancialContext.findOne({ userId });
+                    if (ctx && ctx.needsRecalculation) {
+                        await updateFinancialContext(uid);
+                    }
+                    await forceRegenerateSummary(uid);
+                } catch (err) {
+                    console.error(`[SummaryScheduler] ❌ Failed for user ${uid}:`, err.message);
+                }
+            })
         );
 
         // Clear the stale flags for all processed users

@@ -48,7 +48,7 @@ function ExpenseList({ transactions, onDelete, onDownload, onDeleteAll }) {
           background: '#FF3DAC', opacity: 0.08,
         }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', position: 'relative', zIndex: 1 }}>
           <div>
             <h5 style={{ fontSize: 16, fontWeight: 700, color: '#111' }}>Expense Categories</h5>
             <p style={{ fontSize: 11, color: '#999', marginTop: 2 }}>{groupedArray.length} categories</p>

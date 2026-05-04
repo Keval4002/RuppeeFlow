@@ -124,14 +124,7 @@ function AIChat() {
 
             {/* Chat Modal / Slide-over */}
             {isOpen && (
-                <div style={{
-                    position: 'fixed', bottom: 24, right: 24, zIndex: 60,
-                    width: 360, height: 600, maxHeight: 'calc(100vh - 48px)',
-                    background: '#FFFFFF', borderRadius: 24,
-                    boxShadow: '0 12px 48px rgba(0,0,0,0.15)',
-                    display: 'flex', flexDirection: 'column',
-                    overflow: 'hidden', border: '1px solid #EAEEF5'
-                }}>
+                <div className="fixed sm:bottom-6 sm:right-6 bottom-0 right-0 z-[60] w-full sm:w-[360px] h-[100dvh] sm:h-[600px] sm:max-h-[calc(100vh-48px)] bg-white sm:rounded-3xl shadow-[0_12px_48px_rgba(0,0,0,0.15)] flex flex-col overflow-hidden sm:border sm:border-[#EAEEF5]">
                     {/* Header */}
                     <div style={{
                         background: 'linear-gradient(135deg, #111 0%, #1A1A1A 100%)',

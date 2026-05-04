@@ -36,9 +36,31 @@ export const buildFinancialPrompt = (ctx, opts = {}) => {
     const projectedEomSpend  = velocity.projectedEomSpend  ?? 0;
     const momDelta           = velocity.momSpendDeltaPercentage ?? 0;
 
+    // ── Behavioural Analytics ────────────────────────────────────────────────
+    const { behavioural = {}, comparative = {}, personalisationMemory = {} } = ctx;
+    const healthScore = behavioural.financialHealthScore ?? 50;
+    const spendingPatterns = behavioural.spendingPatterns || [];
+    const habitualSpends = behavioural.habitualSpends || [];
+
+    const habitsBlock = habitualSpends.length > 0 
+        ? habitualSpends.map(h => `  • ${h.category}: ${h.frequency}x (${formatINR(h.averageAmount)} avg)`).join("\n") 
+        : "  None tracked.";
+
+    // ── Comparative Intelligence ─────────────────────────────────────────────
+    const momSpendDelta = comparative.momSpendDeltaPercentage ?? momDelta;
+    const yoySpendDelta = comparative.yoySpendDeltaPercentage ?? 0;
+    const categoryDeltasBlock = (comparative.momCategoryDeltas || [])
+        .filter(d => Math.abs(d.deltaPercentage) > 10) // Only show significant changes
+        .map(d => `  • ${d.category}: ${d.deltaPercentage > 0 ? '+' : ''}${d.deltaPercentage}% MoM`)
+        .join("\n") || "  Stable spending across categories.";
+
     // ── Top Categories ───────────────────────────────────────────────────────
     const topCatsBlock = (ctx.topCategoriesMtd ?? [])
         .map((c, i) => `  ${i + 1}. ${c.category}: ${formatINR(c.amount)} (${c.percentageOfTotal}% of spend)`)
+        .join("\n") || "  No data yet.";
+        
+    const topCatsYtdBlock = (ctx.topCategoriesYtd ?? [])
+        .map((c, i) => `  ${i + 1}. ${c.category}: ${formatINR(c.amount)} (${c.percentageOfTotal}% of YTD spend)`)
         .join("\n") || "  No data yet.";
 
     // ── Top Income Sources ───────────────────────────────────────────────────
@@ -79,8 +101,12 @@ Your responses must be:
 • Written in plain English (no code, no markdown tables unless explicitly useful)
 • Denominated in ${currency} (use ₹ symbol)
 
+Respond only about finances. If the user asks something unrelated, politely redirect them.
+
 ━━━━━━━━━━━━━  USER FINANCIAL SNAPSHOT  ━━━━━━━━━━━━━
 [Data as of: ${lastCalc} IST]
+[User Persona: ${personalisationMemory.userPersona || 'Standard User'}]
+[Financial Health Score: ${healthScore}/100]
 
 ▌ THIS MONTH (MTD)
   Income  : ${formatINR(incomeMtd)}
@@ -93,13 +119,24 @@ Your responses must be:
   Expenses: ${formatINR(expenseYtd)}
   Net     : ${formatINR(netYtd)}
 
-▌ SPEND VELOCITY
+▌ SPEND VELOCITY & COMPARATIVE INTELLIGENCE
   Daily Burn Rate    : ${formatINR(dailyBurnRate)}/day
   Projected EOM Spend: ${formatINR(projectedEomSpend)}
-  MoM Spend Delta    : ${formatPercent(momDelta)}
+  MoM Spend Delta    : ${formatPercent(momSpendDelta)}
+  YoY Spend Delta    : ${formatPercent(yoySpendDelta)}
+
+▌ CATEGORY TRENDS (MoM)
+${categoryDeltasBlock}
+
+▌ BEHAVIOURAL HABITS (High Frequency)
+${habitsBlock}
+${spendingPatterns.length > 0 ? '\n▌ PATTERNS DETECTED\n  • ' + spendingPatterns.join('\n  • ') : ''}
 
 ▌ TOP EXPENSE CATEGORIES (MTD)
 ${topCatsBlock}
+
+▌ TOP EXPENSE CATEGORIES (YTD)
+${topCatsYtdBlock}
 
 ▌ TOP INCOME SOURCES (MTD)
 ${topSrcBlock}

@@ -32,7 +32,7 @@ function CustomLineChart({ data }) {
           </defs>
 
           <CartesianGrid stroke='#EAEEF5' strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#999', fontWeight: 500 }} stroke='none' />
+          <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#999', fontWeight: 500 }} stroke='none' tickMargin={8} minTickGap={10} angle={window.innerWidth < 600 ? -45 : 0} textAnchor={window.innerWidth < 600 ? "end" : "middle"} />
           <YAxis tick={{ fontSize: 11, fill: '#999' }} stroke='none' />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#FF3DAC40', strokeWidth: 1 }} />
 

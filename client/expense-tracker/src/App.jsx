@@ -5,6 +5,7 @@ import SignUp from './pages/Auth/SignUp'
 import Home from './pages/Dashboard/Home'
 import Income from './pages/Dashboard/Income'
 import Expense from './pages/Dashboard/Expense'
+import InsightsDetails from './pages/Dashboard/InsightsDetails'
 import UserProvider from './context/userContext';
 import {Toaster} from 'react-hot-toast'
 
@@ -20,6 +21,7 @@ function App() {
               <Route path='/dashboard' element={<Home/>}/>
               <Route path='/income' element={<Income/>}/>
               <Route path='/expense' element={<Expense/>}/>
+              <Route path='/insights' element={<InsightsDetails/>}/>
           </Routes>
         </Router>
       </div>

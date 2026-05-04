@@ -17,9 +17,9 @@ import { generateCompletion } from "./aiService.js";
 const SUMMARY_TTL_HOURS = 6;
 
 const SUMMARY_PROMPT_USER_MSG =
-    "Generate a concise, friendly financial health summary for this month. " +
-    "Cover: net position, biggest wins, biggest risk areas, and one actionable tip. " +
-    "Keep it under 120 words. Use ₹ for currency.";
+    "Generate a concise, highly personalised financial health summary covering both THIS MONTH'S velocity and THIS YEAR'S trajectory. " +
+    "Analyze any behavioural habits, MoM spending changes, or specific categories of concern based on the provided data. " +
+    "Keep it under 150 words. Avoid generic advice; use the user's actual numbers and health score. Use ₹ for currency.";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal helpers

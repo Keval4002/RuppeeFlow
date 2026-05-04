@@ -29,7 +29,7 @@ function CustomBarChart({ data }) {
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} barCategoryGap="30%">
           <CartesianGrid stroke='#EAEEF5' strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#999", fontWeight: 500 }} stroke='none' />
+          <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#999", fontWeight: 500 }} stroke='none' tickMargin={8} minTickGap={10} angle={window.innerWidth < 600 ? -45 : 0} textAnchor={window.innerWidth < 600 ? "end" : "middle"} />
           <YAxis tick={{ fontSize: 11, fill: "#999" }} stroke='none' />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(200,247,58,0.07)' }} />
           <Bar dataKey="amount" radius={[10, 10, 4, 4]}>

@@ -26,6 +26,19 @@ const TransactionSnapshotSchema = new mongoose.Schema({
     date: { type: Date, required: true }
 }, { _id: false });
 
+const HabitSchema = new mongoose.Schema({
+    category: { type: String, required: true },
+    frequency: { type: Number, required: true }, // transactions over a period
+    averageAmount: { type: Number, required: true },
+    trend: { type: String, enum: ['Increasing', 'Decreasing', 'Stable'], default: 'Stable' }
+}, { _id: false });
+
+const MomCategoryDeltaSchema = new mongoose.Schema({
+    category: { type: String, required: true },
+    deltaPercentage: { type: Number, required: true },
+    absoluteDelta: { type: Number, required: true }
+}, { _id: false });
+
 const RecurringItemSchema = new mongoose.Schema({
     name: { type: String, required: true },
     estimatedMonthlyCost: { type: Number, required: true }
@@ -51,7 +64,8 @@ const FinancialContextSchema = new mongoose.Schema({
         expenseMtd: { type: Number, default: 0 },
         incomeYtd: { type: Number, default: 0 },
         expenseYtd: { type: Number, default: 0 },
-        savingsRateMtd: { type: Number, default: 0 } // % of income saved
+        savingsRateMtd: { type: Number, default: 0 }, // % of income saved MTD
+        savingsRateYtd: { type: Number, default: 0 }  // % of income saved YTD
     },
 
     // 2. VELOCITY METRICS
@@ -61,12 +75,37 @@ const FinancialContextSchema = new mongoose.Schema({
         momSpendDeltaPercentage: { type: Number, default: 0 } // e.g., +15% compared to last month
     },
 
-    // 3. EMBEDDED ARRAYS
+    // 3. BEHAVIOURAL ANALYTICS
+    behavioural: {
+        financialHealthScore: { type: Number, default: 0 }, // 0 to 100
+        habitualSpends: [HabitSchema],
+        spendingPatterns: [{ type: String }],
+    },
+
+    // 4. COMPARATIVE INTELLIGENCE & MEMORY
+    comparative: {
+        momSpendDeltaPercentage: { type: Number, default: 0 }, // E.g. +15% compared to last month
+        yoySpendDeltaPercentage: { type: Number, default: 0 },
+        momCategoryDeltas: [MomCategoryDeltaSchema],
+    },
+    
+    personalisationMemory: {
+        userPersona: { type: String, default: "Standard User" }, // e.g. "Frugal", "Impulse Buyer", "Saver"
+        longTermGoals: [{ type: String }],
+    },
+
+    // 5. EMBEDDED ARRAYS
     // Top categories for the current month
     topCategoriesMtd: [CategorySummarySchema],
+    
+    // Top categories for the current year (YTD)
+    topCategoriesYtd: [CategorySummarySchema],
 
     // Top income sources for the current month
     topIncomeSourcesMtd: [IncomeSourceSummarySchema],
+    
+    // Top income sources for the current year (YTD)
+    topIncomeSourcesYtd: [IncomeSourceSummarySchema],
     
     // The 3-5 largest transactions this month (helps AI catch big irregular spends)
     largestTransactionsMtd: [TransactionSnapshotSchema],
@@ -74,7 +113,7 @@ const FinancialContextSchema = new mongoose.Schema({
     // Detected subscriptions (e.g., Netflix, Gym)
     recurringSubscriptions: [RecurringItemSchema],
 
-    // 4. PRE-COMPUTED AI INSIGHTS
+    // 6. PRE-COMPUTED AI INSIGHTS
     // Array of plain text strings. Saves the AI from doing math.
     // Example: "Dining out is 40% higher than your 3-month average."
     anomalies: [{ type: String }],

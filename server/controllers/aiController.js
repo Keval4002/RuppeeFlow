@@ -66,3 +66,21 @@ export const summaryHandler = async (req, res) => {
         return res.status(500).json({ error: "Failed to generate financial summary." });
     }
 };
+
+// ── GET /api/v1/ai/context ───────────────────────────────────────────────────
+/**
+ * Returns the raw FinancialContext document (health score, habits, etc) for the frontend UI.
+ */
+export const contextHandler = async (req, res) => {
+    const userId = req.user.id;
+    try {
+        let ctx = await FinancialContext.findOne({ userId });
+        if (!ctx || ctx.needsRecalculation) {
+            ctx = await updateFinancialContext(userId);
+        }
+        return res.status(200).json({ success: true, context: ctx });
+    } catch (error) {
+        console.error("[aiController] contextHandler error:", error);
+        return res.status(500).json({ error: "Failed to fetch financial context." });
+    }
+};

@@ -3,16 +3,23 @@ import axiosInstance from '../../utils/axiosInstance';
 import { API_PATH } from '../../utils/apiPath';
 import { BsStars } from 'react-icons/bs';
 
+import { useNavigate } from 'react-router-dom';
+import { appCache } from '../../utils/dataCache';
+
 function AIInsights() {
-  const [summary, setSummary] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(appCache.aiSummary || '');
+  const [loading, setLoading] = useState(!appCache.aiSummary);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchInsights() {
+    async function fetchInsights(force = false) {
+      if (!force && appCache.aiSummary) return;
+      if (loading && !appCache.aiSummary) setLoading(true);
       try {
         const response = await axiosInstance.get(API_PATH.AI.SUMMARY);
         if (response.data && response.data.summary) {
           setSummary(response.data.summary);
+          appCache.aiSummary = response.data.summary;
         } else {
           setSummary("No insights available at the moment. Add more transactions to generate insights!");
         }
@@ -25,7 +32,7 @@ function AIInsights() {
     }
     fetchInsights();
     
-    const handleUpdate = () => fetchInsights();
+    const handleUpdate = () => fetchInsights(true);
     window.addEventListener('app-data-updated', handleUpdate);
     return () => window.removeEventListener('app-data-updated', handleUpdate);
   }, []);
@@ -36,12 +43,15 @@ function AIInsights() {
   };
 
   return (
-    <div style={{
+    <div 
+      onClick={() => navigate('/insights')}
+      style={{
       background: 'linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%)',
       borderRadius: 24, padding: '24px',
       color: '#FFFFFF',
       boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
       position: 'relative', overflow: 'hidden',
+      cursor: 'pointer'
     }}>
       {/* Decorative blobs */}
       <div style={{
