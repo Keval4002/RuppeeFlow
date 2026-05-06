@@ -49,9 +49,10 @@ const regenerateSummary = async (ctxDoc) => {
         userMessage: SUMMARY_PROMPT_USER_MSG,
     });
 
-    // Persist summary and timestamp back into the context doc
+    // Persist summary, timestamp, and clear refresh flag in a single save
     ctxDoc.aiSummary = summary;
     ctxDoc.summaryGeneratedAt = new Date();
+    ctxDoc.summaryNeedsRefresh = false;
     await ctxDoc.save();
 
     console.log(`[summaryService] Summary regenerated for user ${ctxDoc.userId}`);
@@ -72,8 +73,8 @@ const regenerateSummary = async (ctxDoc) => {
  * @param {string} userId - The user's MongoDB ObjectId string
  * @returns {Promise<{ summary: string, fromCache: boolean }>}
  */
-export const getOrCreateSummary = async (userId) => {
-    const ctx = await FinancialContext.findOne({ userId });
+export const getOrCreateSummary = async (userId, existingCtx = null) => {
+    const ctx = existingCtx || await FinancialContext.findOne({ userId });
 
     if (!ctx) {
         return {
@@ -90,11 +91,8 @@ export const getOrCreateSummary = async (userId) => {
         return { summary: ctx.aiSummary, fromCache: true };
     }
 
-    // Cache miss or stale → regenerate
+    // Cache miss or stale → regenerate (also clears summaryNeedsRefresh internally)
     const summary = await regenerateSummary(ctx);
-
-    // Clear the refresh flag after successful generation
-    await FinancialContext.updateOne({ userId }, { $set: { summaryNeedsRefresh: false } });
 
     return { summary, fromCache: false };
 };
@@ -114,10 +112,11 @@ export const markSummaryStale = async (userId) => {
 /**
  * Force-regenerate the summary immediately (used by the cron scheduler).
  * @param {string} userId
+ * @param {Object} [existingCtx] - Optional pre-fetched FinancialContext document
  * @returns {Promise<string>} The new summary text
  */
-export const forceRegenerateSummary = async (userId) => {
-    const ctx = await FinancialContext.findOne({ userId });
+export const forceRegenerateSummary = async (userId, existingCtx = null) => {
+    const ctx = existingCtx || await FinancialContext.findOne({ userId });
     if (!ctx) return null;
     return regenerateSummary(ctx);
 };

@@ -5,6 +5,7 @@ import axiosInstance from '../../utils/axiosInstance';
 import { API_PATH } from '../../utils/apiPath';
 import { BsActivity, BsLightningCharge, BsGraphUpArrow, BsGraphDownArrow, BsStars } from 'react-icons/bs';
 import { FaHeartbeat, FaChartLine } from 'react-icons/fa';
+import { formatAmountINR } from '../../utils/helper';
 
 function InsightsDetails() {
   const [contextData, setContextData] = useState(appCache.semanticContext);
@@ -85,7 +86,7 @@ function InsightsDetails() {
                 <p style={{ marginBottom: 8 }}>The AI reads your transactions just like a human accountant would. Instead of just looking at raw numbers, it looked at your real-world activities.</p>
                 <ul style={{ listStyle: 'disc', paddingLeft: 20, marginTop: 8 }}>
                     {largestTransactionsMtd.length > 0 && (
-                        <li>It noticed your biggest transaction this month was <strong>₹{largestTransactionsMtd[0]?.amount}</strong> for <strong>{largestTransactionsMtd[0]?.categoryOrSource}</strong>.</li>
+                        <li>It noticed your biggest transaction this month was <strong>₹{formatAmountINR(largestTransactionsMtd[0]?.amount)}</strong> for <strong>{largestTransactionsMtd[0]?.categoryOrSource}</strong>.</li>
                     )}
                     <li>It checked if you spent more or less than last month (Spend Velocity).</li>
                     <li>It compared your monthly habits to your yearly totals to see if you are staying on track.</li>

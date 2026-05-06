@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import Expense from "../models/Expense.js";
 import Income from "../models/Income.js";
 import FinancialContext from "../models/FinancialContext.js";
-import { markSummaryStale } from "./summaryService.js";
 
 export const updateFinancialContext = async (userId) => {
     try {
@@ -255,6 +254,7 @@ export const updateFinancialContext = async (userId) => {
                 $set: {
                     needsRecalculation: false,
                     lastCalculatedAt: new Date(),
+                    summaryNeedsRefresh: true, // Mark AI summary as stale (lazily regenerated on next request)
                     macro: { incomeMtd, expenseMtd, incomeYtd, expenseYtd, savingsRateMtd, savingsRateYtd, currency: 'INR' },
                     velocity: { dailyBurnRate: Number(dailyBurnRate.toFixed(2)), projectedEomSpend: Number(projectedEomSpend.toFixed(2)), momSpendDeltaPercentage: Number(momSpendDeltaPercentage), currency: 'INR' },
                     behavioural: { financialHealthScore, habitualSpends, spendingPatterns },
@@ -269,9 +269,6 @@ export const updateFinancialContext = async (userId) => {
             },
             { new: true, upsert: true } // Create if it doesn't exist
         );
-
-        // Mark the AI summary as stale — it will be lazily regenerated on next request
-        await markSummaryStale(userId);
 
         return updatedContext;
 

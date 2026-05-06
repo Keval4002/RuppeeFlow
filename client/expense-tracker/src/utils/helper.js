@@ -25,12 +25,28 @@ export const addThousandsSeperator = (num) => {
   // Round to exactly 2 decimal places to avoid floating-point noise
   const rounded = parseFloat(Number(num).toFixed(2));
   const [integerPart, fractionalPart] = rounded.toString().split(".");
-  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  // Indian numbering: first group of 3 from right, then groups of 2
+  // e.g. 1,00,00,000 for 1 crore
+  const formattedInteger = integerPart.replace(/(\d)(?=(\d\d)+\d$)/g, "$1,");
 
   // Always show 2 decimal places
   const decimals = fractionalPart ? fractionalPart.padEnd(2, "0") : "00";
 
   return `₹ ${formattedInteger}.${decimals}`;
+};
+
+/**
+ * Formats a number in Indian comma style (e.g. 1,00,000.00).
+ * Returns just the formatted number string — no ₹ prefix.
+ */
+export const formatAmountINR = (num) => {
+  if (num == null || isNaN(num)) return "0.00";
+  const rounded = parseFloat(Number(num).toFixed(2));
+  const [integerPart, fractionalPart] = rounded.toString().split(".");
+  const formattedInteger = integerPart.replace(/(\d)(?=(\d\d)+\d$)/g, "$1,");
+  const decimals = fractionalPart ? fractionalPart.padEnd(2, "0") : "00";
+  return `${formattedInteger}.${decimals}`;
 };
 
 export const preparedExpenseBarChartData = (data = [])=>{

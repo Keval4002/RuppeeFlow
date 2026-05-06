@@ -78,6 +78,33 @@ const deleteExpense = async(req, res)=>{
     }
 }
 
+//Update Expense Amount
+const updateExpense = async(req, res)=>{
+    const userId = req.user.id;
+    try {
+        const { amount } = req.body;
+
+        if (!amount || isNaN(amount) || Number(amount) <= 0) {
+            return res.status(400).json({message:"Amount must be a positive number"});
+        }
+
+        const updated = await Expense.findOneAndUpdate(
+            { _id: req.params.id, userId },
+            { $set: { amount: parseFloat(amount) } },
+            { new: true }
+        );
+
+        if (!updated) {
+            return res.status(404).json({message:"Expense not found"});
+        }
+
+        eventBus.emit('dataUpdated', userId);
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({message:"Server Error"});
+    }
+}
+
 //Delete All Expenses by interval (all, month, day)
 const deleteExpensesByInterval = async(req, res)=>{
     const userId = req.user.id;
@@ -219,4 +246,4 @@ const uploadExpenseExcel = async(req, res)=>{
     }
 }
 
-export {addExpense, getAllExpense, deleteExpense, deleteExpensesByInterval, downloadExpenseExcel, uploadExpenseExcel}
+export {addExpense, getAllExpense, deleteExpense, updateExpense, deleteExpensesByInterval, downloadExpenseExcel, uploadExpenseExcel}

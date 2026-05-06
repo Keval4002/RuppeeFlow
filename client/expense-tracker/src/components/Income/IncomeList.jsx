@@ -5,7 +5,7 @@ import moment from 'moment'
 import useUserAuth from '../../hooks/useUserAuth'
 import Modal from '../Modal'
 
-function IncomeList({ transactions, onDelete, onDownload, onDeleteAll }) {
+function IncomeList({ transactions, onDelete, onDownload, onDeleteAll, onAmountUpdate }) {
   useUserAuth();
 
   const [selectedGroupKey, setSelectedGroupKey] = useState(null);
@@ -99,12 +99,14 @@ function IncomeList({ transactions, onDelete, onDownload, onDeleteAll }) {
           {selectedGroup?.transactions?.map(income => (
             <TransactionInfoCard
               key={income._id}
+              id={income._id}
               title={income.source}
               icon={income.icon}
               date={moment(income.date).format("Do MMM YYYY")}
               amount={income.amount}
               type="income"
               onDelete={() => onDelete(income._id)}
+              onAmountUpdate={onAmountUpdate}
             />
           ))}
         </div>

@@ -50,7 +50,7 @@ function InfoCard({ icon, label, color, value }) {
 
         <div>
           <p style={{ fontSize: 12, fontWeight: 600, color: theme.text, marginBottom: 4, opacity: 0.8 }}>{label}</p>
-          <p style={{ fontSize: 24, fontWeight: 800, color: '#111', lineHeight: 1 }}>₹ {value}</p>
+          <p style={{ fontSize: 24, fontWeight: 800, color: '#111', lineHeight: 1 }}>{value}</p>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import CustomPieChart from '../Charts/CustomPieChart';
+import { addThousandsSeperator } from '../../utils/helper';
 
 const COLORS = ["#C8F73A", "#FF3DAC", "#FFE600", "#3DBAFF"]
 
@@ -42,7 +43,7 @@ function RecentIncomeWithChart({ data, totalIncome }) {
       <CustomPieChart
         data={chartData}
         label="Total Income"
-        totalAmount={`₹${totalIncome}`}
+        totalAmount={addThousandsSeperator(totalIncome)}
         showTextAnchor
         colors={COLORS}
       />

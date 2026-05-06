@@ -55,7 +55,8 @@ export const summaryHandler = async (req, res) => {
             ctx = await updateFinancialContext(userId);
         }
 
-        const { summary, fromCache } = await getOrCreateSummary(userId);
+        // Pass pre-fetched ctx to avoid a duplicate findOne inside getOrCreateSummary
+        const { summary, fromCache } = await getOrCreateSummary(userId, ctx);
         return res.status(200).json({
             success: true,
             fromCache,

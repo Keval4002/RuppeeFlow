@@ -105,6 +105,18 @@ function Expense() {
     }
   }
 
+  const handleUpdateExpenseAmount = async(id, newAmount) => {
+    try {
+      await axiosInstance.put(API_PATH.EXPENSE.UPDATE_EXPENSE(id), { amount: newAmount });
+      toast.success("Amount updated");
+      clearAppCache();
+      fetchExpenseDetails(true);
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      toast.error(error.response?.data?.message || "Failed to update amount");
+    }
+  }
+
   const handleDownloadExpenseDetails = async()=>{
     try {
       const response = await axiosInstance.get(API_PATH.EXPENSE.DOWNLOAD_EXPENSE, 
@@ -155,6 +167,7 @@ function Expense() {
           }}
           onDownload={handleDownloadExpenseDetails}
           onDeleteAll={() => setOpenDeleteByIntervalModal(true)}
+          onAmountUpdate={handleUpdateExpenseAmount}
           />
         </div>
 

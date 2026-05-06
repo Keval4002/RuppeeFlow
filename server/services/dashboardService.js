@@ -15,50 +15,56 @@ const getDashboardData = async(req, res)=>{
         const userId = req.user.id;
         const userObjectId = new Types.ObjectId(String(userId));
         
-        //Fetch Total Income and Expense
-
-        const totalIncome = await Income.aggregate([
-            {$match: {userId: userObjectId}},
-            {$group: {_id:null, total: {$sum: "$amount"}}},
+        //Fetch all independent queries in parallel
+        const [
+            totalIncome,
+            totalExpense,
+            last60DaysIncomeTransactions,
+            last30DaysExpenseTransactions,
+            lastIncomeTransactions,
+            lastExpenseTransactions,
+            financialContext
+        ] = await Promise.all([
+            Income.aggregate([
+                {$match: {userId: userObjectId}},
+                {$group: {_id:null, total: {$sum: "$amount"}}},
+            ]),
+            Expense.aggregate([
+                {$match: {userId: userObjectId}},
+                {$group: {_id:null, total: {$sum: "$amount"}}},
+            ]),
+            Income.find({
+                userId, 
+                date: {$gte : daysAgo(60)},
+            }).sort({date:-1}),
+            Expense.find({
+                userId, 
+                date: {$gte: daysAgo(30)},
+            }).sort({date:-1}),
+            Income.find({userId}).sort({date:-1}).limit(5),
+            Expense.find({userId}).sort({date:-1}).limit(5),
+            FinancialContext.findOne({ userId: userObjectId }).lean()
         ]);
-
-        const totalExpense = await Expense.aggregate([
-        {$match: {userId: userObjectId}},
-        {$group: {_id:null, total: {$sum: "$amount"}}},
-        ]);
-        //Get income transactions from last 60 days
-        const last60DaysIncomeTransactions = await Income.find({
-            userId, 
-            date: {$gte : daysAgo(60)},
-        }).sort({date:-1})
 
         //Get total income for last 60 days
         const incomeLast60Days = last60DaysIncomeTransactions.reduce((sum, transaction)=>{
             return sum + transaction.amount;
         }, 0);
 
-        //Get expense transactions from last 30 days 
-        const last30DaysExpenseTransactions = await Expense.find({
-            userId, 
-            date: {$gte: daysAgo(30)},
-        }).sort({date:-1})
-
         //Get total expenses for last 30 days
         const expensesLast30Days = last30DaysExpenseTransactions.reduce((sum, transaction)=>sum+transaction.amount, 0);
 
-        //Fetch last 5 transactions income + expense
+        //Combine last 5 transactions income + expense
         const lastTransactions = [
-            ...(await Income.find({userId}).sort({date:-1}).limit(5)).map((txn)=>({
+            ...lastIncomeTransactions.map((txn)=>({
                 ...txn.toObject(),
                 type:"income",
             })), 
-            ...(await Expense.find({userId}).sort({date:-1}).limit(5)).map((txn)=>({
+            ...lastExpenseTransactions.map((txn)=>({
                 ...txn.toObject(),
                 type:"expense",
             })),
         ].sort((a,b)=>b.date-a.date)//Sort the latest first
-
-        const financialContext = await FinancialContext.findOne({ userId: userObjectId }).lean();
 
         res.json({
             totalBalance: parseFloat(((totalIncome[0]?.total||0) - (totalExpense[0]?.total||0)).toFixed(2)),

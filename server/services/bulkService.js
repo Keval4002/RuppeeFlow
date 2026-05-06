@@ -35,7 +35,8 @@ const uploadBulkExcel = async(req, res)=>{
 
         // Validate and insert data
         const errors = [];
-        const successCount = {expenses: 0, income: 0};
+        const validExpenses = [];
+        const validIncome = [];
         
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
@@ -66,36 +67,38 @@ const uploadBulkExcel = async(req, res)=>{
                 continue;
             }
 
-            try {
-                // Normalize icon: accept legacy "Icon" header or "Icon (optional)"
-                const iconValue = row.Icon || row["Icon (optional)"] || '';
+            // Normalize icon: accept legacy "Icon" header or "Icon (optional)"
+            const iconValue = row.Icon || row["Icon (optional)"] || '';
 
-                if (type === 'expense') {
-                    const newExpense = new Expense({
-                        userId,
-                        icon: iconValue,
-                        category: row.Name,
-                        amount: parseFloat(row.Amount),
-                        date: dateObj
-                    });
-
-                    await newExpense.save();
-                    successCount.expenses++;
-                } else {
-                    const newIncome = new Income({
-                        userId,
-                        icon: iconValue,
-                        source: row.Name,
-                        amount: parseFloat(row.Amount),
-                        date: dateObj
-                    });
-
-                    await newIncome.save();
-                    successCount.income++;
-                }
-            } catch (error) {
-                errors.push(`Row ${i + 2}: ${error.message}`);
+            if (type === 'expense') {
+                validExpenses.push({
+                    userId,
+                    icon: iconValue,
+                    category: row.Name,
+                    amount: parseFloat(row.Amount),
+                    date: dateObj
+                });
+            } else {
+                validIncome.push({
+                    userId,
+                    icon: iconValue,
+                    source: row.Name,
+                    amount: parseFloat(row.Amount),
+                    date: dateObj
+                });
             }
+        }
+
+        // Batch insert validated records (2 DB calls max instead of N individual saves)
+        const successCount = { expenses: 0, income: 0 };
+
+        if (validExpenses.length > 0) {
+            const inserted = await Expense.insertMany(validExpenses, { ordered: false });
+            successCount.expenses = inserted.length;
+        }
+        if (validIncome.length > 0) {
+            const inserted = await Income.insertMany(validIncome, { ordered: false });
+            successCount.income = inserted.length;
         }
 
         // Clean up uploaded file

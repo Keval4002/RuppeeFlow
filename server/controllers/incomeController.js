@@ -1,1 +1,1 @@
-export {addIncome, getAllIncome, deleteIncome, deleteIncomeByInterval, downloadIncomeExcel, uploadIncomeExcel} from '../services/incomeService.js' 
+export {addIncome, getAllIncome, deleteIncome, updateIncome, deleteIncomeByInterval, downloadIncomeExcel, uploadIncomeExcel} from '../services/incomeService.js' 

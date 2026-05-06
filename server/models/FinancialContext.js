@@ -129,4 +129,9 @@ const FinancialContextSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Worker polling query (runs every 5s)
+FinancialContextSchema.index({ needsRecalculation: 1 });
+// Scheduler query for stale summaries
+FinancialContextSchema.index({ summaryNeedsRefresh: 1, summaryGeneratedAt: 1 });
+
 export default mongoose.model("FinancialContext", FinancialContextSchema);

@@ -57,7 +57,7 @@ function Navbar({ activeMenu }) {
             fontWeight: 800, fontSize: 20, color: '#111',
             letterSpacing: '-0.5px',
           }}>
-            Gullak
+            Ruppeeflow
           </span>
         </div>
       </div>

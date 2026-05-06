@@ -1,1 +1,1 @@
-export {addExpense, getAllExpense, deleteExpense, deleteExpensesByInterval, downloadExpenseExcel, uploadExpenseExcel} from '../services/expenseService.js'
+export {addExpense, getAllExpense, deleteExpense, updateExpense, deleteExpensesByInterval, downloadExpenseExcel, uploadExpenseExcel} from '../services/expenseService.js'

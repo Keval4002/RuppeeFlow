@@ -13,6 +13,7 @@ export const API_PATH={
         ADD_INCOME: "api/v1/income/add", 
         GET_ALL_INCOME: "api/v1/income/get",
         DELETE_INCOME: (incomeId)=>`api/v1/income/${incomeId}`,
+        UPDATE_INCOME: (incomeId)=>`api/v1/income/${incomeId}`,
         DOWNLOAD_INCOME: "api/v1/income/downloadExcel",
         UPLOAD_INCOME: "api/v1/income/uploadExcel",
         DELETE_INCOME_BY_INTERVAL: "api/v1/income/deleteByInterval"
@@ -21,6 +22,7 @@ export const API_PATH={
         ADD_EXPENSE: "api/v1/expense/add",
         GET_ALL_EXPENSE: "api/v1/expense/get",
         DELETE_EXPENSE: (expenseId)=>`api/v1/expense/${expenseId}`,
+        UPDATE_EXPENSE: (expenseId)=>`api/v1/expense/${expenseId}`,
         DOWNLOAD_EXPENSE: "api/v1/expense/downloadExcel",
         UPLOAD_EXPENSE: "api/v1/expense/uploadExcel",
         DELETE_EXPENSE_BY_INTERVAL: "api/v1/expense/deleteByInterval"

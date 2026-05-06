@@ -1,9 +1,13 @@
-import React from 'react'
-import { LuUtensils, LuTrendingUp, LuTrendingDown, LuTrash2 } from 'react-icons/lu'
+import React, { useState, useRef, useEffect } from 'react'
+import { LuUtensils, LuTrendingUp, LuTrendingDown, LuTrash2, LuCheck, LuX } from 'react-icons/lu'
+import { formatAmountINR } from '../../utils/helper'
 
-function TransactionInfoCard({ title, icon, date, amount, type, hideDeleteBtn, onDelete, onClick }) {
+function TransactionInfoCard({ title, icon, date, amount, type, hideDeleteBtn, onDelete, onClick, onAmountUpdate, id }) {
 
   const isIncome = type === "income";
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const inputRef = useRef(null);
 
   const badgeStyle = isIncome
     ? { background: '#F0FBD0', color: '#4A6E00', border: '1px solid #C8F73A40' }
@@ -14,6 +18,43 @@ function TransactionInfoCard({ title, icon, date, amount, type, hideDeleteBtn, o
     const emojiRegex = /^[\p{Emoji_Presentation}]+$/u;
     return emojiRegex.test(str) || /^[\uD800-\uDBFF][\uDC00-\uDFFF]$/.test(str);
   }
+
+  const handleAmountClick = (e) => {
+    e.stopPropagation();
+    if (!onAmountUpdate) return; // not editable if no handler
+    setEditValue(Number(amount).toString());
+    setEditing(true);
+  };
+
+  const handleSave = (e) => {
+    e.stopPropagation();
+    const newAmount = parseFloat(editValue);
+    if (!editValue || isNaN(newAmount) || newAmount <= 0) {
+      setEditing(false);
+      return;
+    }
+    if (newAmount !== Number(amount)) {
+      onAmountUpdate(id, newAmount);
+    }
+    setEditing(false);
+  };
+
+  const handleCancel = (e) => {
+    e.stopPropagation();
+    setEditing(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleSave(e);
+    if (e.key === 'Escape') handleCancel(e);
+  };
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
 
   return (
     <div className='group relative' style={{
@@ -69,14 +110,63 @@ function TransactionInfoCard({ title, icon, date, amount, type, hideDeleteBtn, o
             </button>
           )}
 
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            padding: '5px 10px', borderRadius: 999,
-            ...badgeStyle, fontSize: 12, fontWeight: 700,
-          }}>
-            {isIncome ? '+' : '-'} ₹{Number(amount).toFixed(2)}
-            {isIncome ? <LuTrendingUp size={13} /> : <LuTrendingDown size={13} />}
-          </div>
+          {editing ? (
+            /* Inline edit mode */
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '3px 6px', borderRadius: 999,
+              ...badgeStyle, fontSize: 12, fontWeight: 700,
+            }}
+              onClick={e => e.stopPropagation()}
+            >
+              <span style={{ fontSize: 12 }}>₹</span>
+              <input
+                ref={inputRef}
+                type="number"
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                style={{
+                  width: 80, border: 'none', outline: 'none',
+                  background: 'transparent', color: 'inherit',
+                  fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+                  MozAppearance: 'textfield',
+                }}
+                min="0.01"
+                step="0.01"
+              />
+              <button onClick={handleSave} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: '#4A6E00', padding: 2, display: 'flex',
+              }}>
+                <LuCheck size={14} />
+              </button>
+              <button onClick={handleCancel} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: '#C00080', padding: 2, display: 'flex',
+              }}>
+                <LuX size={14} />
+              </button>
+            </div>
+          ) : (
+            /* Display mode */
+            <div
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '5px 10px', borderRadius: 999,
+                ...badgeStyle, fontSize: 12, fontWeight: 700,
+                cursor: onAmountUpdate ? 'pointer' : 'default',
+                transition: 'box-shadow 0.2s ease',
+              }}
+              onClick={handleAmountClick}
+              onMouseEnter={e => { if (onAmountUpdate) e.currentTarget.style.boxShadow = '0 0 0 2px ' + (isIncome ? '#C8F73A60' : '#FF3DAC40'); }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
+              title={onAmountUpdate ? 'Click to edit amount' : ''}
+            >
+              {isIncome ? '+' : '-'} ₹{formatAmountINR(amount)}
+              {isIncome ? <LuTrendingUp size={13} /> : <LuTrendingDown size={13} />}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -17,7 +17,7 @@ const runSummaryRefreshJob = async () => {
     const SIX_HOURS_AGO = new Date(Date.now() - 6 * 60 * 60 * 1000);
 
     try {
-        // Find users that need a refresh:
+        // Find users that need a refresh (fetch full docs to avoid re-fetching in the loop):
         //   • summaryNeedsRefresh flag is true, OR
         //   • summary was never generated, OR
         //   • summary is older than 6 hours
@@ -27,7 +27,7 @@ const runSummaryRefreshJob = async () => {
                 { summaryGeneratedAt: null },
                 { summaryGeneratedAt: { $lt: SIX_HOURS_AGO } },
             ],
-        }).select("userId").lean();
+        }).limit(50);
 
         if (staleContexts.length === 0) {
             console.log("[SummaryScheduler] ✅ All summaries are fresh. Nothing to do.");
@@ -38,25 +38,21 @@ const runSummaryRefreshJob = async () => {
 
         // Process in parallel (Groq is fast; limit parallelism if needed for large user bases)
         await Promise.allSettled(
-            staleContexts.map(async ({ userId }) => {
-                const uid = userId.toString();
+            staleContexts.map(async (ctx) => {
+                const uid = ctx.userId.toString();
                 try {
-                    const ctx = await FinancialContext.findOne({ userId });
-                    if (ctx && ctx.needsRecalculation) {
+                    if (ctx.needsRecalculation) {
                         await updateFinancialContext(uid);
+                        // Reload after recalculation since context data changed
+                        const freshCtx = await FinancialContext.findOne({ userId: ctx.userId });
+                        if (freshCtx) await forceRegenerateSummary(uid, freshCtx);
+                    } else {
+                        await forceRegenerateSummary(uid, ctx);
                     }
-                    await forceRegenerateSummary(uid);
                 } catch (err) {
                     console.error(`[SummaryScheduler] ❌ Failed for user ${uid}:`, err.message);
                 }
             })
-        );
-
-        // Clear the stale flags for all processed users
-        const userIds = staleContexts.map((c) => c.userId);
-        await FinancialContext.updateMany(
-            { userId: { $in: userIds } },
-            { $set: { summaryNeedsRefresh: false } }
         );
 
         console.log(`[SummaryScheduler] ✅ Done refreshing ${staleContexts.length} summary/summaries.`);

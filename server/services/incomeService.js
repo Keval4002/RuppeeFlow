@@ -78,6 +78,33 @@ const deleteIncome = async(req, res)=>{
     }
 }
 
+//Update Income Amount
+const updateIncome = async(req, res)=>{
+    const userId = req.user.id;
+    try {
+        const { amount } = req.body;
+
+        if (!amount || isNaN(amount) || Number(amount) <= 0) {
+            return res.status(400).json({message:"Amount must be a positive number"});
+        }
+
+        const updated = await Income.findOneAndUpdate(
+            { _id: req.params.id, userId },
+            { $set: { amount: parseFloat(amount) } },
+            { new: true }
+        );
+
+        if (!updated) {
+            return res.status(404).json({message:"Income not found"});
+        }
+
+        eventBus.emit('dataUpdated', userId);
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({message:"Server Error"});
+    }
+}
+
 //Delete All Income by interval (all, month, day)
 const deleteIncomeByInterval = async(req, res)=>{
     const userId = req.user.id;
@@ -219,4 +246,4 @@ const uploadIncomeExcel = async(req, res)=>{
     }
 }
 
-export {addIncome, getAllIncome, deleteIncome, deleteIncomeByInterval, downloadIncomeExcel, uploadIncomeExcel}
+export {addIncome, getAllIncome, deleteIncome, updateIncome, deleteIncomeByInterval, downloadIncomeExcel, uploadIncomeExcel}

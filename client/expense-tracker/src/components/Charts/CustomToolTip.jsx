@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatAmountINR } from '../../utils/helper'
 
 const CustomToolTip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -14,7 +15,7 @@ const CustomToolTip = ({ active, payload }) => {
           {payload[0].name}
         </p>
         <p style={{ fontSize: 13, color: '#fff' }}>
-          ₹ <span style={{ fontWeight: 700 }}>{Number(payload[0].value).toFixed(2)}</span>
+          ₹ <span style={{ fontWeight: 700 }}>{formatAmountINR(payload[0].value)}</span>
         </p>
       </div>
     );

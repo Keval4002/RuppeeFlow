@@ -10,4 +10,8 @@
         timestamps:true
     });
 
+    // Compound indexes for query performance
+    ExpenseSchema.index({ userId: 1, date: -1 });    // find + sort + date-range filters
+    ExpenseSchema.index({ userId: 1, category: 1 });  // $group by category in aggregations
+
     export default mongoose.model("Expense", ExpenseSchema);

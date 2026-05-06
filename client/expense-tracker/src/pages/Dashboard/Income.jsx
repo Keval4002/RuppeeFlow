@@ -103,6 +103,18 @@ function Income() {
       toast.error(error.response?.data?.message || "Failed to delete income");
     }
   }
+
+  const handleUpdateIncomeAmount = async(id, newAmount) => {
+    try {
+      await axiosInstance.put(API_PATH.INCOME.UPDATE_INCOME(id), { amount: newAmount });
+      toast.success("Amount updated");
+      clearAppCache();
+      fetchIncomeDetails(true);
+    } catch (error) {
+      console.error("Error updating income:", error);
+      toast.error(error.response?.data?.message || "Failed to update amount");
+    }
+  }
   
   //handle download income details
     const handleDownloadIncomeDetails = async()=>{
@@ -155,6 +167,7 @@ function Income() {
             }}
             onDownload={handleDownloadIncomeDetails}
             onDeleteAll={() => setOpenDeleteByIntervalModal(true)}
+            onAmountUpdate={handleUpdateIncomeAmount}
             />
           </div>
 

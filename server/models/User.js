@@ -9,6 +9,10 @@ const UserSchema = new mongoose.Schema({
 }, {
     timestamps:true
 })
+
+// Index for auth lookups (login + register uniqueness check)
+UserSchema.index({ email: 1 }, { unique: true });
+
 //Hash passwords before save
 UserSchema.pre('save', async function (next) {
     if(!this.isModified('password')) return next();

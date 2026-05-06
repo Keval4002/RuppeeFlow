@@ -10,4 +10,8 @@ const IncomeSchema = new mongoose.Schema({
     timestamps:true
 });
 
+// Compound indexes for query performance
+IncomeSchema.index({ userId: 1, date: -1 });   // find + sort + date-range filters
+IncomeSchema.index({ userId: 1, source: 1 });   // $group by source in aggregations
+
 export default mongoose.model("Income", IncomeSchema);
