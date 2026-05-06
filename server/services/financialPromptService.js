@@ -94,7 +94,7 @@ export const buildFinancialPrompt = (ctx, opts = {}) => {
     // ────────────────────────────────────────────────────────────────────────
     // SYSTEM PROMPT
     // ────────────────────────────────────────────────────────────────────────
-    const systemPrompt = `You are Spendwise AI — a sharp, empathetic personal finance assistant for Indian users.
+    const systemPrompt = `You are Gullak AI — a sharp, empathetic personal finance assistant for Indian users.
 Your responses must be:
 • Concise and actionable (no fluff)
 • Friendly but data-driven
