@@ -31,7 +31,7 @@ startSummaryScheduler();
 app.use(express.json());
 app.use(cors({
     origin: [
-        "http://localhost:5173","https://gullak-1.onrender.com","https://gullak.netlify.app"
+        "http://localhost:5173","https://gullak-1.onrender.com","https://gullak.netlify.app", "https://gullak-nu.vercel.app", "gullak-nl79bn96g-keval4002s-projects.vercel.app"
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-type', 'Authorization']
